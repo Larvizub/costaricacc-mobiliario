@@ -1,0 +1,35 @@
+{
+  "name": "app-consulta-mobiliario",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "^4.16.0",
+    "@capacitor/android": "^7.4.2",
+    "@capacitor/cli": "^7.4.2",
+    "@capacitor/core": "^7.4.2",
+    "@capacitor/ios": "^7.4.2",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.0",
+    "@mui/material": "^5.14.0",
+    "emailjs-com": "^3.2.0",
+    "firebase": "^9.22.2",
+    "notistack": "^2.0.8",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.14.2",
+    "react-signature-canvas": "^1.1.0-alpha.2",
+    "recharts": "^3.1.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.4.0"
+  },
+  "packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c"
+}

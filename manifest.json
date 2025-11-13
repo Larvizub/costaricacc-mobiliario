@@ -1,0 +1,37 @@
+{
+  "name": "Gestión de Mobiliario - CCCR",
+  "short_name": "Mobiliario",
+  "description": "Plataforma para la gestión y reserva de mobiliario del Centro de Convenciones de Costa Rica.",
+  "start_url": ".",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#00830e",
+  "icons": [
+    {
+      "src": "https://costaricacc.com/cccr/Logocccr.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://costaricacc.com/cccr/Logocccr.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nueva solicitud",
+      "short_name": "Solicitud",
+      "url": "/reparaciones",
+      "icons": [{ "src": "https://costaricacc.com/cccr/Logocccr.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Entregas",
+      "short_name": "Entregas",
+      "url": "/entrega-activos",
+      "icons": [{ "src": "https://costaricacc.com/cccr/Logocccr.png", "sizes": "192x192" }]
+    }
+  ]
+}
