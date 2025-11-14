@@ -11,8 +11,8 @@ import { sendMailGraph, getSolicitudHtml } from "../utils/email";
 
 function Solicitud() {
   const { user, userData } = useAuth();
-  const allowedCreateRoles = ["areas", "infraestructura", "administrador"];
-  const canCreateSolicitud = (user && user.email === "admin@costaricacc.com") || allowedCreateRoles.includes(userData?.rol);
+  // Permitir que cualquier usuario autenticado cree solicitudes (sin restricción por rol)
+  const canCreateSolicitud = !!user;
   const [form, setForm] = useState({
     evento: "",
     solicitante: "",
