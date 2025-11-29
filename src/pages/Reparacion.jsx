@@ -17,8 +17,7 @@ function Reparacion() {
   console.log('[Reparacion] Component initialized. userData:', userData, 'userEmail:', userEmail, 'normalizedRole:', role);
   const canEditTable = role === 'infraestructura' || role === 'administrador' || role === 'infra';
   const canAddItems = role === 'areas' || role === 'administrador' || role === 'áreas' || role === 'area';
-  // Visibilidad: cualquier usuario autenticado debe poder ver las reparaciones (especialmente infraestructura)
-  const canViewReparaciones = !!user || !!userData;
+  // Visibilidad basada en autenticación (se usa `user`/`userData` directamente donde haga falta)
   const [articulos, setArticulos] = useState([]);
   const [reparaciones, setReparaciones] = useState([]);
   const [categorias, setCategorias] = useState([]);
