@@ -10,11 +10,15 @@ import { sendSolicitudReparacionEmail, sendEntregaActivosEmail } from "../utils/
 
 
 function Reparacion() {
-  const { userData } = useAuth();
-  const userEmail = userData?.email;
-  console.log('[Reparacion] Component initialized. userData:', userData, 'userEmail:', userEmail);
-  const canEditTable = userData?.rol === 'infraestructura' || userData?.rol === 'administrador';
-  const canAddItems = userData?.rol === 'areas' || userData?.rol === 'administrador';
+  const { user, userData } = useAuth();
+  const userEmail = userData?.email || user?.email;
+  // Normalizar rol para evitar problemas de mayúsculas/espacios y variantes
+  const role = userData?.rol?.toString().trim().toLowerCase() || '';
+  console.log('[Reparacion] Component initialized. userData:', userData, 'userEmail:', userEmail, 'normalizedRole:', role);
+  const canEditTable = role === 'infraestructura' || role === 'administrador' || role === 'infra';
+  const canAddItems = role === 'areas' || role === 'administrador' || role === 'áreas' || role === 'area';
+  // Visibilidad: cualquier usuario autenticado debe poder ver las reparaciones (especialmente infraestructura)
+  const canViewReparaciones = !!user || !!userData;
   const [articulos, setArticulos] = useState([]);
   const [reparaciones, setReparaciones] = useState([]);
   const [categorias, setCategorias] = useState([]);
