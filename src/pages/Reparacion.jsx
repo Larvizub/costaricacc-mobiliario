@@ -326,8 +326,8 @@ function Reparacion() {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Reparación de Mobiliario</Typography>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Reparación de Mobiliario</Typography>
       {canAddItems && (
         <>  {/* Formulario de adición individual solo para Areas */}
         <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>

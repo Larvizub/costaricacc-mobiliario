@@ -63,10 +63,15 @@ function Notificaciones() {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Notificaciones</Typography>
-      <Paper sx={{ p: 3, mb: 2 }}>
-        <Typography variant="h6">Correos para recibir notificaciones de nuevas solicitudes</Typography>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Notificaciones</Typography>
+      <Paper sx={theme => ({ 
+        p: 3, 
+        mb: 3,
+        borderRadius: 3,
+        boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)'
+      })}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Correos para recibir notificaciones de nuevas solicitudes</Typography>
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
           <TextField
             label="Agregar correo"
@@ -90,8 +95,13 @@ function Notificaciones() {
         </List>
       </Paper>
       {/* Pool Áreas y Montajes */}
-      <Paper sx={{ p: 3, mb: 2 }}>
-        <Typography variant="h6">Correos para solicitudes de Áreas y Montajes</Typography>
+      <Paper sx={theme => ({ 
+        p: 3, 
+        mb: 3,
+        borderRadius: 3,
+        boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)'
+      })}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Correos para solicitudes de Áreas y Montajes</Typography>
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
           <TextField
             label="Agregar correo"
@@ -115,8 +125,13 @@ function Notificaciones() {
         </List>
       </Paper>
       {/* Pool Infraestructura */}
-      <Paper sx={{ p: 3, mb: 2 }}>
-        <Typography variant="h6">Correos para solicitudes de Infraestructura</Typography>
+      <Paper sx={theme => ({ 
+        p: 3, 
+        mb: 3,
+        borderRadius: 3,
+        boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)'
+      })}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Correos para solicitudes de Infraestructura</Typography>
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
           <TextField
             label="Agregar correo"

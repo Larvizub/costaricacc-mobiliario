@@ -58,25 +58,42 @@ function Existencias() {
   });
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Existencias de Inventario</Typography>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Existencias de Inventario</Typography>
       <TextField
         label="Buscar por nombre o categoría"
         value={busqueda}
         onChange={e => setBusqueda(e.target.value)}
         fullWidth
         margin="normal"
+        sx={{
+          mb: 2,
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+            '&:hover fieldset': { borderColor: '#00830e' },
+            '&.Mui-focused fieldset': { borderColor: '#00830e' }
+          }
+        }}
       />
-      <Button variant="outlined" sx={{ mb: 2 }} onClick={handleExportExcel}>
+      <Button 
+        variant="outlined" 
+        sx={{ 
+          mb: 3,
+          borderRadius: 2,
+          textTransform: 'none',
+          fontWeight: 600
+        }} 
+        onClick={handleExportExcel}
+      >
         Exportar a Excel
       </Button>
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={theme => ({ borderRadius: 3, boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)' })}>
         <Table>
           <TableHead>
-            <TableRow>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Categoría</TableCell>
-              <TableCell>Total</TableCell>
+            <TableRow sx={theme => ({ bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,131,14,0.2)' : 'rgba(0,131,14,0.08)' })}>
+              <TableCell sx={{ fontWeight: 600 }}>Nombre</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Categoría</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Total</TableCell>
             </TableRow>
           </TableHead>
             <TableBody>

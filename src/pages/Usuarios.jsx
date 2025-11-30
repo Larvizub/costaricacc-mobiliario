@@ -82,16 +82,15 @@ function Usuarios() {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Usuarios</Typography>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Usuarios</Typography>
       <Paper
-        sx={{
+        sx={theme => ({
           p: 3,
           width: '100%',
-          bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#fff',
-          color: theme.palette.text.primary,
-          boxShadow: theme.palette.mode === 'dark' ? 2 : 3
-        }}
+          borderRadius: 3,
+          boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)'
+        })}
       >
         <TextField
           label="Buscar usuario"

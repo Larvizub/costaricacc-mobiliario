@@ -291,8 +291,8 @@ function Autorizacion() {
   })();
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Autorización de Solicitudes</Typography>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Autorización de Solicitudes</Typography>
       <TextField
         label="Buscar por evento, solicitante o estado"
         value={busqueda}
@@ -304,11 +304,11 @@ function Autorizacion() {
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mb: 1 }}>
         <Button variant="contained" color="primary" startIcon={<FileDownload />} onClick={handleExport}>Exportar a Excel</Button>
       </Box>
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={theme => ({ borderRadius: 3, boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)' })}>
         <Table>
           <TableHead>
-            <TableRow>
-              <TableCell>ID Evento</TableCell>
+            <TableRow sx={theme => ({ bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,131,14,0.2)' : 'rgba(0,131,14,0.08)' })}>
+              <TableCell sx={{ fontWeight: 600 }}>ID Evento</TableCell>
               <TableCell>Evento</TableCell>
               <TableCell>Artículos</TableCell>
               <TableCell>Solicitante</TableCell>
@@ -420,21 +420,62 @@ function Autorizacion() {
       />
 
       {/* Confirmación genérica */}
-      <Dialog open={confirmDialog.open} onClose={closeConfirm} maxWidth="xs" fullWidth>
-        <DialogTitle>{confirmDialog.title}</DialogTitle>
-        <DialogContent>
+      <Dialog 
+        open={confirmDialog.open} 
+        onClose={closeConfirm} 
+        maxWidth="xs" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
+        }}>
+          {confirmDialog.title}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
           <Typography>{confirmDialog.message}</Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={closeConfirm}>Cancelar</Button>
-          <Button color="error" variant="contained" onClick={handleConfirm}>Confirmar</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={closeConfirm} sx={{ borderRadius: 2 }}>Cancelar</Button>
+          <Button 
+            color="error" 
+            variant="contained" 
+            onClick={handleConfirm}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+          >
+            Confirmar
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* Modal de detalle y rechazo */}
-      <Dialog open={!!detalle && modal} onClose={() => { setModal(false); setDetalle(null); }} maxWidth="sm" fullWidth>
-        <DialogTitle>Detalle de Solicitud</DialogTitle>
-        <DialogContent>
+      <Dialog 
+        open={!!detalle && modal} 
+        onClose={() => { setModal(false); setDetalle(null); }} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
+        }}>
+          Detalle de Solicitud
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
           {detalle && (
             <>
               <Typography variant="subtitle1"><b>Evento:</b> {detalle.evento}</Typography>
@@ -470,13 +511,27 @@ function Autorizacion() {
             </>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => { setModal(false); setDetalle(null); }}>Cerrar</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => { setModal(false); setDetalle(null); }} sx={{ borderRadius: 2 }}>Cerrar</Button>
           {detalle && (((!detalle.estado || detalle.estado === "pendiente") || userData?.rol === 'areas' || userData?.rol === 'infraestructura' || userData?.rol === 'administrador' || (user && user.email === "admin@costaricacc.com"))) && (
-            <Button color="error" variant="contained" onClick={() => openConfirm({ action: 'reject', id: detalle.id, title: 'Confirmar rechazo', message: '¿Confirma rechazar esta solicitud?' })}>Rechazar</Button>
+            <Button 
+              color="error" 
+              variant="contained" 
+              onClick={() => openConfirm({ action: 'reject', id: detalle.id, title: 'Confirmar rechazo', message: '¿Confirma rechazar esta solicitud?' })}
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+            >
+              Rechazar
+            </Button>
           )}
           {detalle && (userData?.rol === 'areas' || userData?.rol === 'infraestructura' || userData?.rol === 'administrador' || (user && user.email === "admin@costaricacc.com")) && (
-            <Button color="error" variant="outlined" onClick={() => openConfirm({ action: 'delete', id: detalle.id, title: 'Eliminar solicitud', message: '¿Confirma eliminar esta solicitud? Esta acción no se puede deshacer.' })}>Eliminar</Button>
+            <Button 
+              color="error" 
+              variant="outlined" 
+              onClick={() => openConfirm({ action: 'delete', id: detalle.id, title: 'Eliminar solicitud', message: '¿Confirma eliminar esta solicitud? Esta acción no se puede deshacer.' })}
+              sx={{ borderRadius: 2, textTransform: 'none' }}
+            >
+              Eliminar
+            </Button>
           )}
         </DialogActions>
       </Dialog>

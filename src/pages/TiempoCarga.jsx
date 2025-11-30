@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, Alert, Chip, IconButton, TablePagination
+  Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, Alert, Chip, IconButton, TablePagination, Avatar
 } from "@mui/material";
 import { BatteryChargingFull, Block, Edit, Delete } from "@mui/icons-material";
 import { db } from "../firebase";
@@ -169,8 +169,8 @@ function TiempoCarga() {
   // No mostrar el módulo si el usuario no es de infraestructura
   if (!isInfra) {
     return (
-      <Box>
-        <Typography variant="h4" gutterBottom>Tiempo de Carga</Typography>
+      <Box sx={{ pb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Tiempo de Carga</Typography>
         <Alert severity="warning">
           No tienes permisos para acceder a este módulo. Solo usuarios de Infraestructura pueden gestionar los tiempos de carga.
         </Alert>
@@ -179,10 +179,13 @@ function TiempoCarga() {
   }
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <BatteryChargingFull /> Tiempo de Carga
-      </Typography>
+    <Box sx={{ pb: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Box sx={{ background: 'linear-gradient(135deg, #00830e, #006400)', borderRadius: 2, p: 1, display: 'flex' }}>
+          <BatteryChargingFull sx={{ color: '#fff', fontSize: 32 }} />
+        </Box>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>Tiempo de Carga</Typography>
+      </Box>
       
       {/* Tabla de artículos de infraestructura */}
       <Paper sx={{ p: 3, width: '100%', mb: 2 }}>
@@ -356,11 +359,26 @@ function TiempoCarga() {
       </Paper>
 
       {/* Modal para programar/editar tiempo de carga */}
-      <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={openModal} 
+        onClose={() => setOpenModal(false)} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
+        }}>
           {editId ? "Editar" : "Programar"} Tiempo de Carga
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ pt: 3 }}>
           {selectedArticulo && (
             <Box sx={{ mt: 1 }}>
               <Typography variant="subtitle1" gutterBottom>
@@ -432,9 +450,21 @@ function TiempoCarga() {
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenModal(false)}>Cancelar</Button>
-          <Button onClick={handleGuardar} variant="contained" sx={{ bgcolor: '#00830e' }}>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setOpenModal(false)} sx={{ borderRadius: 2 }}>Cancelar</Button>
+          <Button 
+            onClick={handleGuardar} 
+            variant="contained" 
+            sx={{ 
+              background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #006b0b 0%, #005400 100%)'
+              }
+            }}
+          >
             {editId ? "Actualizar" : "Programar"}
           </Button>
         </DialogActions>

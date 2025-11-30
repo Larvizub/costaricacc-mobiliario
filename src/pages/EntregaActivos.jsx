@@ -18,6 +18,8 @@ function EntregaActivos() {
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [infoDialogMessage, setInfoDialogMessage] = useState('');
 
+  // Component header will be updated in return statement
+
   useEffect(() => {
     const entregaRef = ref(db, "entregaActivos");
     
@@ -281,10 +283,12 @@ function EntregaActivos() {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Entrega de Activos Reparados</Typography>
+    <Box sx={{ pb: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>Entrega de Activos Reparados</Typography>
+      </Box>
       
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={theme => ({ borderRadius: 3, boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)' })}>
         <Table>
           <TableHead>
             <TableRow>
@@ -326,9 +330,26 @@ function EntregaActivos() {
       </TableContainer>
 
       {/* Modal de revisión */}
-      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
-        <DialogTitle>Revisión de Entrega - {selectedEntrega?.nombre}</DialogTitle>
-        <DialogContent>
+      <Dialog 
+        open={openModal} 
+        onClose={handleCloseModal} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
+        }}>
+          Revisión de Entrega - {selectedEntrega?.nombre}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
           {selectedEntrega && (
             <Box>
               {/* Datos generales */}
@@ -447,12 +468,20 @@ function EntregaActivos() {
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseModal}>Cancelar</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseModal} sx={{ borderRadius: 2 }}>Cancelar</Button>
           <Button 
             variant="contained" 
             onClick={handleSaveRevision}
-            sx={{ bgcolor: '#00830e' }}
+            sx={{ 
+              background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #006b0b 0%, #005400 100%)'
+              }
+            }}
           >
             Procesar Revisión
           </Button>
@@ -460,13 +489,42 @@ function EntregaActivos() {
       </Dialog>
 
       {/* Dialog de notificación después del procesamiento */}
-      <Dialog open={infoDialogOpen} onClose={handleCloseInfoDialog}>
-        <DialogTitle>Notificación</DialogTitle>
-        <DialogContent>
+      <Dialog 
+        open={infoDialogOpen} 
+        onClose={handleCloseInfoDialog}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
+        }}>
+          Notificación
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
           <Typography>{infoDialogMessage}</Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseInfoDialog}>OK</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={handleCloseInfoDialog} 
+            variant="contained"
+            sx={{ 
+              background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #006b0b 0%, #005400 100%)'
+              }
+            }}
+          >
+            OK
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

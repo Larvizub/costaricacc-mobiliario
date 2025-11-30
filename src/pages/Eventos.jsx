@@ -102,14 +102,28 @@ function Eventos() {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 'none', px: { xs: 0, md: 0 } }}>
-      <Typography variant="h4" gutterBottom>Eventos</Typography>
-      <Button variant="outlined" component="label" sx={{ mb: 2 }}>
+    <Box sx={{ width: '100%', maxWidth: 'none', px: { xs: 0, md: 0 }, pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Eventos</Typography>
+      <Button 
+        variant="outlined" 
+        component="label" 
+        sx={{ 
+          mb: 3,
+          borderRadius: 2,
+          textTransform: 'none',
+          fontWeight: 600
+        }}
+      >
         Importar Excel
         <input type="file" accept=".xlsx,.xls" hidden ref={fileInputRef} onChange={handleImportExcel} />
       </Button>
-      {importMsg && <Typography color={importMsg.startsWith("Error") ? "error" : "success.main"} sx={{ mt: 1 }}>{importMsg}</Typography>}
-      <Paper sx={{ p: { xs: 2, md: 3 }, width: '100%', boxShadow: 2, borderRadius: 2, maxWidth: '100%' }} elevation={0}>
+      {importMsg && <Typography color={importMsg.startsWith("Error") ? "error" : "success.main"} sx={{ mb: 2 }}>{importMsg}</Typography>}
+      <Paper sx={theme => ({ 
+        p: { xs: 2, md: 3 }, 
+        width: '100%', 
+        borderRadius: 3,
+        boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)'
+      })} elevation={0}>
         <form onSubmit={handleAdd} style={{ marginBottom: 24 }}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={5}>

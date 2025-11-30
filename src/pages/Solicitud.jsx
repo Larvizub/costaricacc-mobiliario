@@ -323,9 +323,14 @@ function Solicitud() {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Solicitud de Mobiliario</Typography>
-      <Paper sx={{ p: 3, width: '100%' }}>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Solicitud de Mobiliario</Typography>
+      <Paper sx={theme => ({ 
+        p: 3, 
+        width: '100%', 
+        borderRadius: 3,
+        boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)'
+      })}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             {/* Campo de búsqueda de evento, ocupa todo el ancho */}
@@ -452,24 +457,80 @@ function Solicitud() {
             </Grid>
           </Grid>
           {/* Modal de error de disponibilidad */}
-          <Dialog open={errorModal} onClose={() => setErrorModal(false)}>
-            <DialogTitle>Error de disponibilidad</DialogTitle>
-            <DialogContent>
+          <Dialog 
+            open={errorModal} 
+            onClose={() => setErrorModal(false)}
+            PaperProps={{
+              sx: {
+                borderRadius: 3,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+              }
+            }}
+          >
+            <DialogTitle sx={{ 
+              background: 'linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%)',
+              color: '#fff',
+              fontWeight: 600
+            }}>
+              Error de disponibilidad
+            </DialogTitle>
+            <DialogContent sx={{ pt: 3 }}>
               <Typography color="error" sx={{ whiteSpace: 'pre-line' }}>{error}</Typography>
             </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setErrorModal(false)} autoFocus>Cerrar</Button>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+              <Button onClick={() => setErrorModal(false)} autoFocus sx={{ borderRadius: 2 }}>Cerrar</Button>
             </DialogActions>
           </Dialog>
           {success && <Typography color="success.main" sx={{ mt: 2 }}>{success}</Typography>}
-          <Button type="submit" variant="contained" sx={{ mt: 3, bgcolor: "#00830e" }} disabled={!canCreateSolicitud}>Enviar Solicitud</Button>
+          <Button 
+            type="submit" 
+            variant="contained" 
+            sx={{ 
+              mt: 3, 
+              py: 1.5,
+              px: 4,
+              background: 'linear-gradient(135deg, #00830e 0%, #00a819 100%)',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontSize: '1rem',
+              fontWeight: 600,
+              boxShadow: '0 4px 14px rgba(0, 131, 14, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #006b0b 0%, #008c15 100%)',
+                boxShadow: '0 6px 20px rgba(0, 131, 14, 0.4)',
+                transform: 'translateY(-1px)'
+              },
+              '&:disabled': {
+                background: 'grey.400'
+              },
+              transition: 'all 0.2s ease'
+            }} 
+            disabled={!canCreateSolicitud}
+          >
+            Enviar Solicitud
+          </Button>
         </form>
       </Paper>
 
       {/* Modal para agregar/editar artículo */}
-      <Dialog open={modal} onClose={() => setModal(false)}>
-        <DialogTitle>{editIdx !== null ? "Editar artículo" : "Agregar artículo"}</DialogTitle>
-        <DialogContent>
+      <Dialog 
+        open={modal} 
+        onClose={() => setModal(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
+        }}>
+          {editIdx !== null ? "Editar artículo" : "Agregar artículo"}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
           {/* Campo de búsqueda de artículo */}
           <TextField
             label="Buscar artículo"
@@ -531,29 +592,72 @@ function Solicitud() {
             inputProps={{ min: 1 }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setModal(false)}>Cancelar</Button>
-          <Button onClick={handleAddDetalle} variant="contained" sx={{ bgcolor: "#00830e" }}>{editIdx !== null ? "Guardar" : "Agregar"}</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setModal(false)} sx={{ borderRadius: 2 }}>Cancelar</Button>
+          <Button 
+            onClick={handleAddDetalle} 
+            variant="contained" 
+            sx={{ 
+              background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #006b0b 0%, #005400 100%)'
+              }
+            }}
+          >
+            {editIdx !== null ? "Guardar" : "Agregar"}
+          </Button>
         </DialogActions>
       </Dialog>
       {/* Modal de confirmación tras crear la solicitud */}
-      <Dialog open={confirmModalOpen} onClose={() => setConfirmModalOpen(false)}>
-        <DialogTitle>Solicitud procesada</DialogTitle>
-        <DialogContent>
+      <Dialog 
+        open={confirmModalOpen} 
+        onClose={() => setConfirmModalOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
+        }}>
+          Solicitud procesada
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
           <Typography>La solicitud se procesó correctamente.</Typography>
           {lastSolicitudId && (
             <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>ID de la solicitud: {lastSolicitudId}</Typography>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmModalOpen(false)}>Cerrar</Button>
-          <Button onClick={() => {
-            setConfirmModalOpen(false);
-            // reset form para iniciar otra solicitud
-            setForm({ evento: "", solicitante: "", fechaInicio: "", horaInicio: "", fechaFin: "", horaFin: "", entrega: "", observaciones: "" });
-            setDetalle([]);
-            setSuccess("");
-          }} variant="contained" sx={{ bgcolor: "#00830e" }}>Crear otra solicitud</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setConfirmModalOpen(false)} sx={{ borderRadius: 2 }}>Cerrar</Button>
+          <Button 
+            onClick={() => {
+              setConfirmModalOpen(false);
+              // reset form para iniciar otra solicitud
+              setForm({ evento: "", solicitante: "", fechaInicio: "", horaInicio: "", fechaFin: "", horaFin: "", entrega: "", observaciones: "" });
+              setDetalle([]);
+              setSuccess("");
+            }} 
+            variant="contained" 
+            sx={{ 
+              background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #006b0b 0%, #005400 100%)'
+              }
+            }}
+          >
+            Crear otra solicitud
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

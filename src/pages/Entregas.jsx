@@ -360,9 +360,15 @@ function Entregas() {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Entregas</Typography>
-      <Paper sx={{ p: 3, width: '100%', mb: 2 }}>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Entregas</Typography>
+      <Paper sx={theme => ({ 
+        p: 3, 
+        width: '100%', 
+        mb: 3,
+        borderRadius: 3,
+        boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)'
+      })}>
         <TableContainer>
           <Table size="small">
             <TableHead>
@@ -575,15 +581,26 @@ function Entregas() {
             />
           </Paper>
       {/* Modal de revisión */}
-      <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="md" fullWidth>
+      <Dialog 
+        open={openModal} 
+        onClose={() => setOpenModal(false)} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
         <DialogTitle sx={{ 
-          bgcolor: theme => theme.palette.mode === 'dark' ? '#2d3748' : '#f4f7f6', 
-          borderBottom: theme => `1px solid ${theme.palette.mode === 'dark' ? '#4a5568' : '#eee'}`,
-          color: theme => theme.palette.text.primary
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
         }}>
           Revisión de entrega y recepción
         </DialogTitle>
-  <DialogContent sx={{ px: { xs: 2, sm: 3 }, overflowX: 'hidden' }}>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 }, pt: 3, overflowX: 'hidden' }}>
           {selectedSolicitud && selectedArticulo && (() => {
             const rev = selectedSolicitud && selectedSolicitud.revisionEntrega && selectedSolicitud.revisionEntrega[selectedArticulo.articulo];
             // Sólo deshabilitar si ya existe la revisión del tipo actual y el usuario no es admin

@@ -86,13 +86,17 @@ function Categorias() {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Categorías y Solicitantes</Typography>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Categorías y Solicitantes</Typography>
       <Grid container spacing={4}>
         {/* Categorías */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Categorías</Typography>
+          <Paper sx={theme => ({ 
+            p: 3, 
+            borderRadius: 3,
+            boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)'
+          })}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Categorías</Typography>
             <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
               <TextField
                 label="Nueva categoría"
@@ -140,8 +144,12 @@ function Categorias() {
         </Grid>
         {/* Solicitantes */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Pool de Solicitantes</Typography>
+          <Paper sx={theme => ({ 
+            p: 3, 
+            borderRadius: 3,
+            boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)'
+          })}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Pool de Solicitantes</Typography>
             <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
               <TextField
                 label="Nuevo solicitante"

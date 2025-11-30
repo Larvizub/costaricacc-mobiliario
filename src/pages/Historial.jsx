@@ -31,8 +31,8 @@ function Historial() {
   }, []);
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Historial de Solicitudes y Autorizaciones</Typography>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Historial de Solicitudes y Autorizaciones</Typography>
       <TextField
         label="Buscar por evento, solicitante o estado"
         value={busqueda}
@@ -41,16 +41,16 @@ function Historial() {
         margin="normal"
         variant="outlined"
       />
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={theme => ({ borderRadius: 3, boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)' })}>
         <Table>
           <TableHead>
-            <TableRow>
-              <TableCell>ID Evento</TableCell>
-              <TableCell>Evento</TableCell>
-              <TableCell>Solicitante</TableCell>
-              <TableCell>Fechas</TableCell>
-              <TableCell>Estado</TableCell>
-              <TableCell>Observaciones</TableCell>
+            <TableRow sx={theme => ({ bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,131,14,0.2)' : 'rgba(0,131,14,0.08)' })}>
+              <TableCell sx={{ fontWeight: 600 }}>ID Evento</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Evento</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Solicitante</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Fechas</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Observaciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

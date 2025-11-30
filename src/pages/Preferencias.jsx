@@ -70,9 +70,15 @@ function Preferencias() {
   }
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Preferencias</Typography>
-      <Paper sx={{ p: 3, width: '100%', maxWidth: 500 }}>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Preferencias</Typography>
+      <Paper sx={theme => ({ 
+        p: 3, 
+        width: '100%', 
+        maxWidth: 500,
+        borderRadius: 3,
+        boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)'
+      })}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -96,7 +102,29 @@ function Preferencias() {
               </FormControl>
             </Grid>
           </Grid>
-          <Button type="submit" variant="contained" sx={{ mt: 3, bgcolor: "#00830e" }}>Guardar cambios</Button>
+          <Button 
+            type="submit" 
+            variant="contained" 
+            sx={{ 
+              mt: 3,
+              py: 1.5,
+              px: 4,
+              background: 'linear-gradient(135deg, #00830e 0%, #00a819 100%)',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontSize: '1rem',
+              fontWeight: 600,
+              boxShadow: '0 4px 14px rgba(0, 131, 14, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #006b0b 0%, #008c15 100%)',
+                boxShadow: '0 6px 20px rgba(0, 131, 14, 0.4)',
+                transform: 'translateY(-1px)'
+              },
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Guardar cambios
+          </Button>
         </form>
       </Paper>
     </Box>

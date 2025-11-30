@@ -130,26 +130,51 @@ function Inventario() {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Inventario de Mobiliario</Typography>
-      <Button variant="contained" startIcon={<Add />} sx={{ mb: 2, bgcolor: "#00830e" }} onClick={() => handleOpen()}>
-        Agregar Artículo
-      </Button>
-      <Button variant="outlined" component="label" sx={{ mb: 2, ml: 2 }}>
-        Importar Excel
-        <input type="file" accept=".xlsx,.xls" hidden ref={fileInputRef} onChange={handleImportExcel} />
-      </Button>
-      {importMsg && <Typography color={importMsg.startsWith("Error") ? "error" : "success.main"} sx={{ mt: 1 }}>{importMsg}</Typography>}
-      <TableContainer component={Paper}>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Inventario de Mobiliario</Typography>
+      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+        <Button 
+          variant="contained" 
+          startIcon={<Add />} 
+          sx={{ 
+            background: 'linear-gradient(135deg, #00830e 0%, #00a819 100%)',
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 600,
+            boxShadow: '0 4px 14px rgba(0, 131, 14, 0.3)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #006b0b 0%, #008c15 100%)',
+              transform: 'translateY(-1px)'
+            }
+          }} 
+          onClick={() => handleOpen()}
+        >
+          Agregar Artículo
+        </Button>
+        <Button 
+          variant="outlined" 
+          component="label" 
+          sx={{ 
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 600
+          }}
+        >
+          Importar Excel
+          <input type="file" accept=".xlsx,.xls" hidden ref={fileInputRef} onChange={handleImportExcel} />
+        </Button>
+      </Box>
+      {importMsg && <Typography color={importMsg.startsWith("Error") ? "error" : "success.main"} sx={{ mb: 2 }}>{importMsg}</Typography>}
+      <TableContainer component={Paper} sx={theme => ({ borderRadius: 3, boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)' })}>
         <Table>
           <TableHead>
-            <TableRow>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Categoría</TableCell>
-              <TableCell>Cantidad</TableCell>
-              <TableCell>Revisión</TableCell>
-              <TableCell>Total</TableCell>
-              <TableCell align="right">Acciones</TableCell>
+            <TableRow sx={theme => ({ bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,131,14,0.2)' : 'rgba(0,131,14,0.08)' })}>
+              <TableCell sx={{ fontWeight: 600 }}>Nombre</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Categoría</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Cantidad</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Revisión</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Total</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -176,9 +201,24 @@ function Inventario() {
       </TableContainer>
 
       {/* Modal para agregar/editar */}
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editId ? "Editar Artículo" : "Agregar Artículo"}</DialogTitle>
-        <DialogContent sx={{ minWidth: 320 }}>
+      <Dialog 
+        open={open} 
+        onClose={handleClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
+        }}>
+          {editId ? "Editar Artículo" : "Agregar Artículo"}
+        </DialogTitle>
+        <DialogContent sx={{ minWidth: 320, pt: 3 }}>
           <TextField
             label="Nombre del Artículo"
             value={form.nombre}
@@ -217,9 +257,23 @@ function Inventario() {
             inputProps={{ min: 0 }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleSave} variant="contained" sx={{ bgcolor: "#00830e" }}>{editId ? "Guardar" : "Agregar"}</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleClose} sx={{ borderRadius: 2 }}>Cancelar</Button>
+          <Button 
+            onClick={handleSave} 
+            variant="contained" 
+            sx={{ 
+              background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #006b0b 0%, #005400 100%)'
+              }
+            }}
+          >
+            {editId ? "Guardar" : "Agregar"}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

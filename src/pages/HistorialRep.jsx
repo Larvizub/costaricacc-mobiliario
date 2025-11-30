@@ -48,9 +48,9 @@ function HistorialRep() {
   });
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Historial de Recepciones</Typography>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+    <Box sx={{ pb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Historial de Recepciones</Typography>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={4}>
           <TextField
             label="Buscar"
@@ -78,7 +78,7 @@ function HistorialRep() {
         </Grid>
       </Grid>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={theme => ({ borderRadius: 3, boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.08)' })}>
         <Table>
           <TableHead>
             <TableRow>
@@ -112,9 +112,26 @@ function HistorialRep() {
       </TableContainer>
 
       {/* Dialog de detalle */}
-      <Dialog open={detailDialogOpen} onClose={handleCloseDetail} maxWidth="sm" fullWidth>
-        <DialogTitle>Detalle de Recepción - {selectedDetail?.nombre}</DialogTitle>
-        <DialogContent dividers>
+      <Dialog 
+        open={detailDialogOpen} 
+        onClose={handleCloseDetail} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
+        }}>
+          Detalle de Recepción - {selectedDetail?.nombre}
+        </DialogTitle>
+        <DialogContent dividers sx={{ pt: 2 }}>
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -134,8 +151,22 @@ function HistorialRep() {
             </TableBody>
           </Table>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDetail}>Cerrar</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={handleCloseDetail} 
+            variant="contained"
+            sx={{ 
+              background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #006b0b 0%, #005400 100%)'
+              }
+            }}
+          >
+            Cerrar
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
