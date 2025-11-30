@@ -73,13 +73,14 @@ function MainLayout({ children, onToggleTheme }) {
     setMobileOpen(!mobileOpen);
   };
 
-  // Determinar menú según rol
+  // Determinar menú según rol (normalizado para evitar problemas de mayúsculas/acentos)
+  const role = userData?.rol?.toString().trim().toLowerCase() || '';
   let menuItems = menuItemsCliente;
-  if (userData?.rol === "administrador" || user?.email === "admin@costaricacc.com") {
+  if (role === "administrador" || user?.email === "admin@costaricacc.com") {
     menuItems = menuItemsAdmin;
-  } else if (userData?.rol === "infraestructura") {
+  } else if (role === "infraestructura" || role === "infra") {
     menuItems = menuItemsInfra;
-  } else if (userData?.rol === "areas") {
+  } else if (role === "areas" || role === "áreas" || role === "area") {
     menuItems = menuItemsAreas;
   }
   const drawer = (
