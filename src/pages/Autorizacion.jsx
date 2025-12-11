@@ -16,6 +16,7 @@ function Autorizacion() {
   const [detalle, setDetalle] = useState(null);
   const [modal, setModal] = useState(false);
   const [rechazoObs, setRechazoObs] = useState("");
+  const [approveDialog, setApproveDialog] = useState({ open: false, id: null, comment: '' });
   const [confirmDialog, setConfirmDialog] = useState({ open: false, action: null, id: null, title: '', message: '' });
   const [articulos, setArticulos] = useState([]);
   const [solicitantes, setSolicitantes] = useState([]);
@@ -54,9 +55,17 @@ function Autorizacion() {
     return () => { unsub(); unsubArt(); unsubSolis(); unsubEventos(); unsubCategorias(); };
   }, []);
 
-  const handleAprobar = async (id) => {
-    await update(ref(db, `solicitudes/${id}`), { estado: "aprobada" });
+  const handleAprobar = async (id, comment = '') => {
+    const payload = {
+      estado: "aprobada",
+      aprobadoComentario: comment || null,
+      aprobadoPor: user?.uid || user?.email || null,
+      aprobadoEn: new Date().toISOString()
+    };
+    await update(ref(db, `solicitudes/${id}`), payload);
     notificarCambioEstatus(id, "aprobada");
+    // cerrar diálogo si estaba abierto
+    setApproveDialog({ open: false, id: null, comment: '' });
   };
   const handleRechazar = async (id) => {
     await update(ref(db, `solicitudes/${id}`), { estado: "rechazada", rechazoObs });
@@ -95,6 +104,17 @@ function Autorizacion() {
       // Asegurarse de usar la observación actual (rechazoObs) y luego llamar a handleRechazar
       await handleRechazar(id);
     }
+  };
+
+  const openApproveDialog = (id) => {
+    setApproveDialog({ open: true, id, comment: '' });
+  };
+
+  const closeApproveDialog = () => setApproveDialog({ open: false, id: null, comment: '' });
+
+  const handleApproveConfirm = async () => {
+    if (!approveDialog.id) return;
+    await handleAprobar(approveDialog.id, approveDialog.comment);
   };
 
   // Notificar cambio de estatus
@@ -393,7 +413,7 @@ function Autorizacion() {
                   <IconButton color="primary" onClick={() => handleVerDetalle(sol)}><Visibility /></IconButton>
                   {/* Aprobar solo si está pendiente */}
                   {(!sol.estado || sol.estado === "pendiente") && (
-                    <IconButton color="success" onClick={() => handleAprobar(sol.id)}><Check /></IconButton>
+                    <IconButton color="success" onClick={() => openApproveDialog(sol.id)}><Check /></IconButton>
                   )}
                   {/* Rechazar: si está pendiente, mostrar como antes; además permitir a roles areas/infraestructura rechazar incluso si ya fue aprobada */}
                   {((!sol.estado || sol.estado === "pendiente") || userData?.rol === 'areas' || userData?.rol === 'infraestructura' || userData?.rol === 'administrador' || (user && user.email === "admin@costaricacc.com")) && (
@@ -451,6 +471,50 @@ function Autorizacion() {
             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog para aprobar con comentario */}
+      <Dialog
+        open={approveDialog.open}
+        onClose={closeApproveDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+          }
+        }}
+      >
+        <DialogTitle sx={{
+          background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',
+          color: '#fff',
+          fontWeight: 600
+        }}>
+          Aprobar Solicitud
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Typography sx={{ mb: 2 }}>Puedes añadir un comentario que quede registrado junto a la aprobación (opcional):</Typography>
+          <TextField
+            label="Comentario de aprobación"
+            value={approveDialog.comment}
+            onChange={e => setApproveDialog(ad => ({ ...ad, comment: e.target.value }))}
+            fullWidth
+            multiline
+            minRows={3}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={closeApproveDialog} sx={{ borderRadius: 2 }}>Cancelar</Button>
+          <Button
+            color="success"
+            variant="contained"
+            onClick={handleApproveConfirm}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+          >
+            Aprobar
           </Button>
         </DialogActions>
       </Dialog>
