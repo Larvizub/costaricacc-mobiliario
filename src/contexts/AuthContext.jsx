@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
+const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000; // 2 horas en milisegundos
+
 export function useAuth() {
   return useContext(AuthContext);
 }
@@ -18,6 +20,42 @@ export function AuthProvider({ children }) {
   const [userData, setUserData] = useState(null); // datos extendidos
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Gestión de inactividad
+  useEffect(() => {
+    if (!user) return;
+
+    const resetTimer = () => {
+      localStorage.setItem("lastActivity", Date.now().toString());
+    };
+
+    const checkInactivity = () => {
+      const lastActivity = localStorage.getItem("lastActivity");
+      if (lastActivity) {
+        const diff = Date.now() - parseInt(lastActivity);
+        if (diff > INACTIVITY_TIMEOUT) {
+          logout();
+        }
+      } else {
+        resetTimer();
+      }
+    };
+
+    // Eventos para detectar actividad
+    const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart"];
+    events.forEach((name) => document.addEventListener(name, resetTimer));
+
+    // Verificar cada minuto si ha excedido el tiempo
+    const interval = setInterval(checkInactivity, 60000);
+
+    // Verificación inmediata al cargar/cambiar usuario (cubre si el navegador estuvo cerrado)
+    checkInactivity();
+
+    return () => {
+      events.forEach((name) => document.removeEventListener(name, resetTimer));
+      clearInterval(interval);
+    };
+  }, [user]);
 
   // Detectar sesión de Firebase
   useEffect(() => {
