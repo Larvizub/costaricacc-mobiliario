@@ -9,6 +9,7 @@ function Historial() {
   const [solicitudes, setSolicitudes] = useState([]);
   const [solicitantes, setSolicitantes] = useState([]);
   const [eventos, setEventos] = useState([]);
+  const [articulos, setArticulos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
@@ -27,7 +28,12 @@ function Historial() {
       const data = snap.val() || {};
       setEventos(Object.entries(data).map(([id, value]) => ({ id, ...value })));
     });
-    return () => { unsub(); unsubSolis(); unsubEventos(); };
+    const artRef = ref(db, "inventario");
+    const unsubArt = onValue(artRef, snap => {
+      const data = snap.val() || {};
+      setArticulos(Object.entries(data).map(([id, value]) => ({ id, ...value })));
+    });
+    return () => { unsub(); unsubSolis(); unsubEventos(); unsubArt(); };
   }, []);
 
   return (
@@ -47,6 +53,7 @@ function Historial() {
             <TableRow sx={theme => ({ bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,131,14,0.2)' : 'rgba(0,131,14,0.08)' })}>
               <TableCell sx={{ fontWeight: 600 }}>ID Evento</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Evento</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Artículo</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Solicitante</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Fechas</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
@@ -79,6 +86,20 @@ function Historial() {
                     })()
                   }</TableCell>
                   <TableCell>{sol.evento}</TableCell>
+                  <TableCell>
+                    {sol.detalle && sol.detalle.length > 0 ? (
+                      <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                        {sol.detalle.map((item, idx) => {
+                          const art = articulos.find(a => a.id === item.articulo);
+                          return (
+                            <li key={idx}>
+                              {art ? art.nombre : item.articulo} ({item.cantidad})
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : '-'}
+                  </TableCell>
                   <TableCell>{
                     (() => {
                       const s = solicitantes.find(x => x.id === sol.solicitante);
