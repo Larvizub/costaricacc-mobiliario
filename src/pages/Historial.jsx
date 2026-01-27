@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField
+  Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, TablePagination
 } from "@mui/material";
 import { db } from "../firebase";
 import { ref, onValue } from "firebase/database";
@@ -11,6 +11,8 @@ function Historial() {
   const [eventos, setEventos] = useState([]);
   const [articulos, setArticulos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
     const solRef = ref(db, "solicitudes");
@@ -35,6 +37,19 @@ function Historial() {
     });
     return () => { unsub(); unsubSolis(); unsubEventos(); unsubArt(); };
   }, []);
+
+  useEffect(() => { setPage(0); }, [busqueda]);
+
+  const filteredSolicitudes = solicitudes.filter(sol => {
+    const s = solicitantes.find(x => x.id === sol.solicitante);
+    const nombreSolicitante = s ? s.nombre : sol.solicitante;
+    const estado = sol.estado || "pendiente";
+    return (
+      sol.evento?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      nombreSolicitante?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      estado?.toLowerCase().includes(busqueda.toLowerCase())
+    );
+  });
 
   return (
     <Box sx={{ pb: 4 }}>
@@ -61,19 +76,18 @@ function Historial() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {solicitudes
-              .filter(sol => {
-                const s = solicitantes.find(x => x.id === sol.solicitante);
-                const nombreSolicitante = s ? s.nombre : sol.solicitante;
-                const estado = sol.estado || "pendiente";
+            {(() => {
+              if (!filteredSolicitudes || filteredSolicitudes.length === 0) {
                 return (
-                  sol.evento?.toLowerCase().includes(busqueda.toLowerCase()) ||
-                  nombreSolicitante?.toLowerCase().includes(busqueda.toLowerCase()) ||
-                  estado?.toLowerCase().includes(busqueda.toLowerCase())
+                  <TableRow>
+                    <TableCell colSpan={7}><Typography variant="caption">No hay resultados.</Typography></TableCell>
+                  </TableRow>
                 );
-              })
-              .map(sol => (
-                <TableRow key={sol.id}>
+              }
+              const start = page * rowsPerPage;
+              const paged = filteredSolicitudes.slice(start, start + rowsPerPage);
+              return paged.map(sol => (
+                              <TableRow key={sol.id}>
                   <TableCell>{
                     (() => {
                       let evento = null;
@@ -125,10 +139,20 @@ function Historial() {
                   </TableCell>
                   <TableCell>{sol.observaciones}</TableCell>
                 </TableRow>
-              ))}
+              ));
+            })()}
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        component="div"
+        count={filteredSolicitudes.length}
+        page={page}
+        onPageChange={(e, newPage) => setPage(newPage)}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+        rowsPerPageOptions={[5]}
+      />
     </Box>
   );
 }
