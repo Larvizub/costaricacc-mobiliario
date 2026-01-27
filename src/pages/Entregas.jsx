@@ -662,6 +662,12 @@ function Entregas() {
                         }
                       }
                     }
+                    // ordenar por fecha más reciente primero
+                    rows.sort((a, b) => {
+                      const fechaA = a.fecha ? new Date(a.fecha).getTime() : 0;
+                      const fechaB = b.fecha ? new Date(b.fecha).getTime() : 0;
+                      return fechaB - fechaA; // descendente: más reciente primero
+                    });
                     // aplicar filtro por búsqueda (evento)
                     const filtered = rows.filter(r => r.evento && r.evento.toLowerCase().includes((searchTerm || '').toLowerCase()));
                     if (filtered.length === 0) return (<TableRow><TableCell colSpan={8}><Typography variant="caption">No hay revisiones registradas para la búsqueda.</Typography></TableCell></TableRow>);
