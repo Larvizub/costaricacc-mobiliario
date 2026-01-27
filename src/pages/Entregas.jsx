@@ -799,10 +799,6 @@ function Entregas() {
                   </Grid>
                   <Grid item xs={12}><Divider sx={{ my: 1 }} /></Grid>
                   <Grid item xs={12}>
-                    <FormControlLabel
-                      control={<Checkbox checked={reviewType === 'recepcion'} onChange={() => setReviewType(r => r === 'entrega' ? 'recepcion' : 'entrega')} />}
-                      label={"Modo: " + (reviewType === 'entrega' ? 'Entrega' : 'Recepción')}
-                    />
                   </Grid>
                   <Grid container spacing={2}>
                     {itemsRevision.map(item => (
