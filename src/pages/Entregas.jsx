@@ -50,6 +50,8 @@ function Entregas() {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const rowsPerPage = 10;
+  const [pageEntregas, setPageEntregas] = useState(0);
+  const rowsPerPageEntregas = 10;
   const [liberarReserva, setLiberarReserva] = useState(false);
 
   useEffect(() => {
@@ -81,16 +83,18 @@ function Entregas() {
     return () => { unsubSol(); unsubCat(); unsubArt(); unsubSolis(); if (unsubRecep) unsubRecep(); };
   }, []);
 
-  // Filtrar solicitudes aprobadas y de categoría infraestructura
-  const solicitudesInfra = solicitudes.filter(sol => {
-    if (sol.estado !== "aprobada" || !sol.detalle) return false;
-    // Buscar si algún artículo es de categoría infraestructura
-    return sol.detalle.some(item => {
-      const art = articulos.find(a => a.id === item.articulo);
-      const cat = art && categorias.find(c => c.id === art.categoria);
-      return cat && (cat.nombre === "Infraestructura");
-    });
-  });
+  // Filtrar solicitudes aprobadas y de categoría infraestructura, ordenadas por fecha más reciente
+  const solicitudesInfra = useMemo(() => {
+    return solicitudes.filter(sol => {
+      if (sol.estado !== "aprobada" || !sol.detalle) return false;
+      // Buscar si algún artículo es de categoría infraestructura
+      return sol.detalle.some(item => {
+        const art = articulos.find(a => a.id === item.articulo);
+        const cat = art && categorias.find(c => c.id === art.categoria);
+        return cat && (cat.nombre === "Infraestructura");
+      });
+    }).sort((a, b) => new Date(b.fechaFin) - new Date(a.fechaFin));
+  }, [solicitudes, articulos, categorias]);
 
   const handleOpenRevision = (sol, articulo, overrideType = null, forceEmpty = false) => {
     setSelectedSolicitud(sol);
@@ -326,6 +330,22 @@ function Entregas() {
       }
       // --- Fin notificación ---
       setSuccess("Revisión guardada correctamente.");
+      // Si se guardó en modo entrega, cambiar automáticamente a modo recepción
+      if (reviewType === 'entrega') {
+        setReviewType('recepcion');
+        // Resetear campos para recepción
+        setRevision(itemsRevision.reduce((acc, it) => ({ ...acc, [it.key]: null }), {}));
+        setComentarios({});
+        setEntregadoA("");
+        setFirma("");
+        setObservaciones("");
+        setFechaEntrega("");
+        setHoraEntrega("");
+        setLiberarReserva(false);
+        if (sigCanvasRef.current) sigCanvasRef.current.clear();
+        setSuccess("Revisión de entrega guardada. Ahora en modo recepción.");
+        setError("");
+      }
       // Liberar reserva si se marcó y es entrega antes del tiempo
       if (liberarReserva && reviewType === 'entrega') {
         const ahora = new Date();
@@ -342,7 +362,8 @@ function Entregas() {
           }
         }
       }
-      setOpenModal(false);
+      // No cerrar el modal para permitir recepción inmediata
+      // setOpenModal(false);
     } catch (err) {
       setError("No se pudo guardar la revisión.");
       console.log("[DEBUG] Error al guardar:", err);
@@ -381,69 +402,81 @@ function Entregas() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {solicitudesInfra.map(sol => (
-                sol.detalle.map((item, idx) => {
-                  const art = articulos.find(a => a.id === item.articulo);
-                  const revAll = sol && sol.revisionEntrega && sol.revisionEntrega[item.articulo];
-                          const hasEntrega = revAll && revAll.entrega;
-                          const hasRecepcion = revAll && revAll.recepcion;
-                          // Si ya tiene entrega y recepcion, ocultamos la línea (revisado completamente)
-                          if (hasEntrega && hasRecepcion) return null;
-                          return (
-                              <TableRow key={sol.id + '-' + item.articulo}>
-                                <TableCell>{sol.evento}</TableCell>
-                                <TableCell>{(() => {
-                                  const s = solicitantes.find(x => x.id === sol.solicitante);
-                                  return s ? s.nombre : sol.solicitante;
-                                })()}</TableCell>
-                                <TableCell>{art ? art.nombre : item.articulo} ({item.cantidad})</TableCell>
-                                <TableCell>
-                                  {hasEntrega && hasRecepcion ? <span style={{ color: '#2e7d32', fontWeight: 600 }}>Recibido</span>
-                                    : hasEntrega ? <span style={{ color: '#00830e', fontWeight: 600 }}>Entregado</span>
-                                    : <span style={{ color: '#fbc02d', fontWeight: 600 }}>Pendiente</span>}
-                                </TableCell>
-                      <TableCell>
-                          <Button
-                          size="small"
-                          variant="contained"
-                          onClick={() => handleOpenRevision(sol, item, 'entrega', true)}
-                          sx={theme => ({
-                            bgcolor: theme.palette.mode === 'dark' ? '#fff' : '#00830e',
-                            color: theme.palette.mode === 'dark' ? '#111' : '#fff',
-                            fontWeight: 600,
-                            boxShadow: 'none',
-                            '&:hover': {
-                              bgcolor: theme.palette.mode === 'dark' ? '#eee' : '#00690b',
-                              color: theme.palette.mode === 'dark' ? '#111' : '#fff',
-                            },
-                            border: theme.palette.mode === 'dark' ? '1px solid #222' : undefined
-                          })}
-                        >
-                          Revisar
-                        </Button>
-                        {revAll && isAdmin && (
-                          <Button
+              {(() => {
+                const startEntregas = pageEntregas * rowsPerPageEntregas;
+                const pagedSolicitudesInfra = solicitudesInfra.slice(startEntregas, startEntregas + rowsPerPageEntregas);
+                return pagedSolicitudesInfra.map(sol => (
+                  sol.detalle.map((item, idx) => {
+                    const art = articulos.find(a => a.id === item.articulo);
+                    const revAll = sol && sol.revisionEntrega && sol.revisionEntrega[item.articulo];
+                            const hasEntrega = revAll && revAll.entrega;
+                            const hasRecepcion = revAll && revAll.recepcion;
+                            // Si ya tiene entrega y recepcion, ocultamos la línea (revisado completamente)
+                            if (hasEntrega && hasRecepcion) return null;
+                            return (
+                                <TableRow key={sol.id + '-' + item.articulo}>
+                                  <TableCell>{sol.evento}</TableCell>
+                                  <TableCell>{(() => {
+                                    const s = solicitantes.find(x => x.id === sol.solicitante);
+                                    return s ? s.nombre : sol.solicitante;
+                                  })()}</TableCell>
+                                  <TableCell>{art ? art.nombre : item.articulo} ({item.cantidad})</TableCell>
+                                  <TableCell>
+                                    {hasEntrega && hasRecepcion ? <span style={{ color: '#2e7d32', fontWeight: 600 }}>Recibido</span>
+                                      : hasEntrega ? <span style={{ color: '#00830e', fontWeight: 600 }}>Entregado</span>
+                                      : <span style={{ color: '#fbc02d', fontWeight: 600 }}>Pendiente</span>}
+                                  </TableCell>
+                        <TableCell>
+                            <Button
                             size="small"
-                            variant="outlined"
-                            color="error"
-                            sx={{ ml: 1 }}
-                            onClick={async () => {
-                              // Eliminar revisión
-                              const prev = sol.revisionEntrega || {};
-                              const newRev = { ...prev };
-                              delete newRev[item.articulo];
-                              await update(ref(db, `solicitudes/${sol.id}`), { revisionEntrega: newRev });
-                            }}
-                          >Eliminar</Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              ))}
+                            variant="contained"
+                            onClick={() => handleOpenRevision(sol, item, 'entrega', true)}
+                            sx={theme => ({
+                              bgcolor: theme.palette.mode === 'dark' ? '#fff' : '#00830e',
+                              color: theme.palette.mode === 'dark' ? '#111' : '#fff',
+                              fontWeight: 600,
+                              boxShadow: 'none',
+                              '&:hover': {
+                                bgcolor: theme.palette.mode === 'dark' ? '#eee' : '#00690b',
+                                color: theme.palette.mode === 'dark' ? '#111' : '#fff',
+                              },
+                              border: theme.palette.mode === 'dark' ? '1px solid #222' : undefined
+                            })}
+                          >
+                            Revisar
+                          </Button>
+                          {revAll && isAdmin && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              sx={{ ml: 1 }}
+                              onClick={async () => {
+                                // Eliminar revisión
+                                const prev = sol.revisionEntrega || {};
+                                const newRev = { ...prev };
+                                delete newRev[item.articulo];
+                                await update(ref(db, `solicitudes/${sol.id}`), { revisionEntrega: newRev });
+                              }}
+                            >Eliminar</Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ));
+              })()}
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          component="div"
+          count={solicitudesInfra.length}
+          page={pageEntregas}
+          onPageChange={(e, newPage) => setPageEntregas(newPage)}
+          rowsPerPage={rowsPerPageEntregas}
+          rowsPerPageOptions={[rowsPerPageEntregas]}
+        />
       </Paper>
           {/* Historial global separado: muestra todas las entregas/recepciones guardadas */}
           <Paper sx={{ p: 3, width: '100%', mb: 2 }} variant="outlined">
