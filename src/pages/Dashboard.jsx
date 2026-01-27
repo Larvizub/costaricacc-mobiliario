@@ -16,10 +16,22 @@ import {
 } from "@mui/icons-material";
 import { db } from "../firebase";
 import { ref, onValue } from "firebase/database";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, PieChart, Pie, Cell } from "recharts";
+// Recharts es pesado; lo importamos dinámicamente para evitar bloquear la optimización
+let Recharts = null;
 
 
 function Dashboard() {
+  const [rechartsComponents, setRechartsComponents] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then(mod => {
+      if (mounted) setRechartsComponents(mod);
+    }).catch(err => {
+      console.error('No se pudo cargar recharts dinámicamente', err);
+    });
+    return () => { mounted = false; };
+  }, []);
   const [solicitudes, setSolicitudes] = useState([]);
   const [eventosMes, setEventosMes] = useState([]);
   const [totalSolicitudes, setTotalSolicitudes] = useState(0);
@@ -379,25 +391,34 @@ function Dashboard() {
             bgcolor: theme.palette.mode === 'dark' ? 'background.paper' : '#fff'
           })}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Distribución de Solicitudes</Typography>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={dataPie}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {dataPie.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {rechartsComponents ? (
+              (() => {
+                const { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } = rechartsComponents;
+                return (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={dataPie}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {dataPie.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                );
+              })()
+            ) : (
+              <Typography variant="body2">Cargando gráfico...</Typography>
+            )}
           </Paper>
         </Grid>
         
@@ -408,18 +429,27 @@ function Dashboard() {
             bgcolor: theme.palette.mode === 'dark' ? 'background.paper' : '#fff'
           })}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Por Estado ({meses[mes]})</Typography>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={dataBarras} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <XAxis dataKey="estado" tick={{ fontSize: 12 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="cantidad" radius={[4, 4, 0, 0]}>
-                  {dataBarras.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getBarColor(entry.estado)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {rechartsComponents ? (
+              (() => {
+                const { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar, Cell } = rechartsComponents;
+                return (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={dataBarras} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <XAxis dataKey="estado" tick={{ fontSize: 12 }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                      <Tooltip />
+                      <Bar dataKey="cantidad" radius={[4, 4, 0, 0]}>
+                        {dataBarras.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={getBarColor(entry.estado)} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                );
+              })()
+            ) : (
+              <Typography variant="body2">Cargando gráfico...</Typography>
+            )}
           </Paper>
         </Grid>
         
@@ -430,15 +460,24 @@ function Dashboard() {
             bgcolor: theme.palette.mode === 'dark' ? 'background.paper' : '#fff'
           })}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Tendencia Diaria</Typography>
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={dataLineas} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                <XAxis dataKey="dia" tick={{ fontSize: 12 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Line type="monotone" dataKey="cantidad" stroke="#00830e" strokeWidth={3} dot={{ fill: '#00830e', strokeWidth: 2 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            {rechartsComponents ? (
+              (() => {
+                const { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Line } = rechartsComponents;
+                return (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <LineChart data={dataLineas} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                      <XAxis dataKey="dia" tick={{ fontSize: 12 }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="cantidad" stroke="#00830e" strokeWidth={3} dot={{ fill: '#00830e', strokeWidth: 2 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                );
+              })()
+            ) : (
+              <Typography variant="body2">Cargando gráfico...</Typography>
+            )}
           </Paper>
         </Grid>
       </Grid>

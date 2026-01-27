@@ -4,7 +4,6 @@ import {
   Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, TablePagination
 } from "@mui/material";
 import { Check, Close, Visibility, Delete, FileDownload } from "@mui/icons-material";
-import * as XLSX from 'xlsx';
 import { db } from "../firebase";
 import { ref, onValue, update, get, remove } from "firebase/database";
 import { sendMailGraph, getStatusHtml } from "../utils/email";
@@ -187,10 +186,12 @@ function Autorizacion() {
     setModal(true);
   };
 
-  const exportToXlsx = (filename, rows) => {
+  const exportToXlsx = async (filename, rows) => {
     if (!rows || !rows.length) return;
 
-    const data = rows.map(r => {
+    try {
+      const XLSX = await import('xlsx');
+      const data = rows.map(r => {
       const solicitanteObj = solicitantes.find(s => s.id === r.solicitante);
       const solicitanteNombre = solicitanteObj ? solicitanteObj.nombre : r.solicitante;
       const items = (r.detalle || []).map(it => {
@@ -228,9 +229,9 @@ function Autorizacion() {
       };
     });
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    // Ajustes de columna para mejor lectura
-    ws['!cols'] = [
+      const ws = XLSX.utils.json_to_sheet(data);
+      // Ajustes de columna para mejor lectura
+      ws['!cols'] = [
       { wch: 12 }, // ID Evento
       { wch: 30 }, // Evento
       { wch: 50 }, // Artículos
@@ -243,9 +244,13 @@ function Autorizacion() {
       { wch: 40 }, // Observaciones
       { wch: 12 }  // Estado
     ];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Autorizaciones');
-    XLSX.writeFile(wb, filename);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Autorizaciones');
+      XLSX.writeFile(wb, filename);
+    } catch (e) {
+      console.error('Error loading xlsx for export', e);
+      alert('No fue posible exportar a Excel. Intenta recargar la página.');
+    }
   };
 
   const handleExport = () => {

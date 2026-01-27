@@ -4,9 +4,6 @@ import {
 } from "@mui/material";
 import { db } from "../firebase";
 import { ref, onValue } from "firebase/database";
-// Referencia a reparaciones (para calcular revisión acumulada)
-const repRefDb = ref(db, "reparaciones");
-import * as XLSX from "xlsx";
 
 function Existencias() {
   const [articulos, setArticulos] = useState([]);
@@ -15,6 +12,8 @@ function Existencias() {
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
+    // Referencia a reparaciones (para calcular revisión acumulada)
+    const repRefDb = ref(db, "reparaciones");
     const invRef = ref(db, "inventario");
     const catRef = ref(db, "categorias");
     const unsubInv = onValue(invRef, snap => {
@@ -36,17 +35,23 @@ function Existencias() {
     };
   }, []);
 
-  // Exportar a Excel
-  const handleExportExcel = () => {
-    const data = articulosFiltrados.map(art => ({
-      Nombre: art.nombre,
-      Categoria: categorias.find(c => c.id === art.categoria)?.nombre || "",
-      Cantidad: art.cantidad
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Existencias");
-    XLSX.writeFile(wb, "existencias.xlsx");
+  // Exportar a Excel (import dinámico para evitar problemas con optimizeDeps)
+  const handleExportExcel = async () => {
+    try {
+      const XLSX = await import('xlsx');
+      const data = articulosFiltrados.map(art => ({
+        Nombre: art.nombre,
+        Categoria: categorias.find(c => c.id === art.categoria)?.nombre || "",
+        Cantidad: art.cantidad
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Existencias");
+      XLSX.writeFile(wb, "existencias.xlsx");
+    } catch (e) {
+      console.error('Error loading xlsx for export', e);
+      alert('No fue posible exportar a Excel. Intenta recargar la página.');
+    }
   };
 
   // Filtrado por coincidencia de palabras

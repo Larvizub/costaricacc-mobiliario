@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import {
   Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Dialog, DialogTitle, DialogContent, DialogActions, Checkbox, FormControlLabel, TextField, Grid, Alert, Divider, Chip, Stack, Tooltip, IconButton, TablePagination
 } from "@mui/material";
-import SignatureCanvas from "react-signature-canvas";
+const SignatureCanvas = React.lazy(() => import('react-signature-canvas'));
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { db } from "../firebase";
@@ -990,22 +990,24 @@ function Entregas() {
                         }} />
                       ) : (
                         <Box sx={{ width: '100%', height: '100%' }}>
-                          <SignatureCanvas
-                            ref={operarioSigCanvasRef}
-                            penColor="#00830e"
-                            backgroundColor="#fff"
-                            canvasProps={{ 
-                              width: 520, 
-                              height: 140, 
-                              style: { 
-                                width: '100%',
-                                height: 140,
-                                borderRadius: 8, 
-                                background: '#fff' 
-                              } 
-                            }}
-                            onEnd={() => setOperarioFirma(operarioSigCanvasRef.current ? operarioSigCanvasRef.current.getCanvas().toDataURL("image/png") : "")}
-                          />
+                          <React.Suspense fallback={<div>Cargando firma...</div>}>
+                            <SignatureCanvas
+                              ref={operarioSigCanvasRef}
+                              penColor="#00830e"
+                              backgroundColor="#fff"
+                              canvasProps={{ 
+                                width: 520, 
+                                height: 140, 
+                                style: { 
+                                  width: '100%',
+                                  height: 140,
+                                  borderRadius: 8, 
+                                  background: '#fff' 
+                                } 
+                              }}
+                              onEnd={() => setOperarioFirma(operarioSigCanvasRef.current ? operarioSigCanvasRef.current.getCanvas().toDataURL("image/png") : "")}
+                            />
+                          </React.Suspense>
                         </Box>
                       )}
                     </Box>
@@ -1050,22 +1052,24 @@ function Entregas() {
                         }} />
                       ) : (
                         <Box sx={{ width: '100%', height: '100%' }}>
-                          <SignatureCanvas
-                            ref={sigCanvasRef}
-                            penColor="#00830e"
-                            backgroundColor="#fff"
-                            canvasProps={{ 
-                              width: 520, 
-                              height: 140, 
-                              style: { 
-                                width: '100%',
-                                height: 140,
-                                borderRadius: 8, 
-                                background: '#fff' 
-                              } 
-                            }}
-                            onEnd={() => setFirma(sigCanvasRef.current ? sigCanvasRef.current.getCanvas().toDataURL("image/png") : "")}
-                          />
+                          <React.Suspense fallback={<div>Cargando firma...</div>}>
+                            <SignatureCanvas
+                              ref={sigCanvasRef}
+                              penColor="#00830e"
+                              backgroundColor="#fff"
+                              canvasProps={{ 
+                                width: 520, 
+                                height: 140, 
+                                style: { 
+                                  width: '100%',
+                                  height: 140,
+                                  borderRadius: 8, 
+                                  background: '#fff' 
+                                } 
+                              }}
+                              onEnd={() => setFirma(sigCanvasRef.current ? sigCanvasRef.current.getCanvas().toDataURL("image/png") : "")}
+                            />
+                          </React.Suspense>
                         </Box>
                       )}
                     </Box>

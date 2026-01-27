@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./components/MainLayout";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { useAuth } from "./contexts/AuthContext";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
@@ -9,7 +10,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EntregaActivos = lazy(() => import("./pages/EntregaActivos"));
 const Solicitud = lazy(() => import("./pages/Solicitud"));
 const Inventario = lazy(() => import("./pages/Inventario"));
-const Existencias = lazy(() => import("./pages/Existencias"));
+const Existencias = lazy(() => import(/* @vite-ignore */ "./pages/Existencias"));
 const Autorizacion = lazy(() => import("./pages/Autorizacion"));
 const Historial = lazy(() => import("./pages/Historial"));
 const Categorias = lazy(() => import("./pages/Categorias"));
@@ -75,24 +76,26 @@ function App() {
           <Route path="/*" element={
             user ? (
               <MainLayout onToggleTheme={handleToggleTheme}>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/solicitud" element={<Solicitud />} />
-                  <Route path="/inventario" element={<Inventario />} />
-                  <Route path="/autorizacion" element={<Autorizacion />} />
-                  <Route path="/existencias" element={<Existencias />} />
-                  <Route path="/historial" element={<Historial />} />
-                  <Route path="/categorias" element={<Categorias />} />
-                  <Route path="/usuarios" element={<Usuarios />} />
-                  <Route path="/eventos" element={<Eventos />} />
-                  <Route path="/entregas" element={<Entregas />} />
-                  <Route path="/tiempo-carga" element={<TiempoCarga />} />
-                  <Route path="/notificaciones" element={<Notificaciones />} />
-                  <Route path="/preferencias" element={<Preferencias />} />
-                  <Route path="/reparacion" element={<Reparacion />} />
-          <Route path="/entrega-activos" element={<EntregaActivos />} />
-                  <Route path="/historial-rep" element={<HistorialRep />} />
-                </Routes>
+                <ErrorBoundary>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/solicitud" element={<Solicitud />} />
+                    <Route path="/inventario" element={<Inventario />} />
+                    <Route path="/autorizacion" element={<Autorizacion />} />
+                    <Route path="/existencias" element={<Existencias />} />
+                    <Route path="/historial" element={<Historial />} />
+                    <Route path="/categorias" element={<Categorias />} />
+                    <Route path="/usuarios" element={<Usuarios />} />
+                    <Route path="/eventos" element={<Eventos />} />
+                    <Route path="/entregas" element={<Entregas />} />
+                    <Route path="/tiempo-carga" element={<TiempoCarga />} />
+                    <Route path="/notificaciones" element={<Notificaciones />} />
+                    <Route path="/preferencias" element={<Preferencias />} />
+                    <Route path="/reparacion" element={<Reparacion />} />
+                    <Route path="/entrega-activos" element={<EntregaActivos />} />
+                    <Route path="/historial-rep" element={<HistorialRep />} />
+                  </Routes>
+                </ErrorBoundary>
               </MainLayout>
             ) : (
               <Navigate to="/login" />

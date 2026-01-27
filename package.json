@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "dev:clean": "rm -rf node_modules/.vite dist && vite",
+    "dev:fresh": "rm -rf node_modules/.vite node_modules/.cache dist && vite --force",
     "build": "vite build",
     "preview": "vite preview"
   },
