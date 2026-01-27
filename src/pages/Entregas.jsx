@@ -48,10 +48,12 @@ function Entregas() {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [page, setPage] = useState(0);
+  const [fechaInicioFiltro, setFechaInicioFiltro] = useState("");
+  const [fechaFinFiltro, setFechaFinFiltro] = useState("");
   const rowsPerPage = 10;
   const [pageEntregas, setPageEntregas] = useState(0);
   const rowsPerPageEntregas = 10;
+  const [page, setPage] = useState(0);
   const [liberarReserva, setLiberarReserva] = useState(false);
   const [operarioNombre, setOperarioNombre] = useState("");
   const [operarioTelefono, setOperarioTelefono] = useState("");
@@ -92,13 +94,30 @@ function Entregas() {
     return solicitudes.filter(sol => {
       if (sol.estado !== "aprobada" || !sol.detalle) return false;
       // Buscar si algún artículo es de categoría infraestructura
-      return sol.detalle.some(item => {
+      const esInfra = sol.detalle.some(item => {
         const art = articulos.find(a => a.id === item.articulo);
         const cat = art && categorias.find(c => c.id === art.categoria);
         return cat && (cat.nombre === "Infraestructura");
       });
+      if (!esInfra) return false;
+      
+      // Filtro por fecha de reserva
+      if (fechaInicioFiltro && sol.fechaFin) {
+        const fechaReserva = new Date(sol.fechaFin);
+        const fechaInicio = new Date(fechaInicioFiltro);
+        if (fechaReserva < fechaInicio) return false;
+      }
+      if (fechaFinFiltro && sol.fechaFin) {
+        const fechaReserva = new Date(sol.fechaFin);
+        const fechaFin = new Date(fechaFinFiltro);
+        // Ajustar fecha fin al final del día
+        fechaFin.setHours(23, 59, 59, 999);
+        if (fechaReserva > fechaFin) return false;
+      }
+      
+      return true;
     }).sort((a, b) => new Date(b.fechaFin) - new Date(a.fechaFin));
-  }, [solicitudes, articulos, categorias]);
+  }, [solicitudes, articulos, categorias, fechaInicioFiltro, fechaFinFiltro]);
 
   const handleOpenRevision = (sol, articulo, overrideType = null, forceEmpty = false) => {
     setSelectedSolicitud(sol);
@@ -411,6 +430,41 @@ function Entregas() {
   return (
     <Box sx={{ pb: 4 }}>
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Entregas</Typography>
+      
+      {/* Controles de filtro para entregas pendientes */}
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3, flexWrap: 'wrap' }}>
+        <TextField
+          size="small"
+          label="Fecha inicio"
+          type="date"
+          value={fechaInicioFiltro}
+          onChange={e => { setFechaInicioFiltro(e.target.value); setPageEntregas(0); setPage(0); }}
+          InputLabelProps={{ shrink: true }}
+          sx={{ width: 160 }}
+        />
+        <TextField
+          size="small"
+          label="Fecha fin"
+          type="date"
+          value={fechaFinFiltro}
+          onChange={e => { setFechaFinFiltro(e.target.value); setPageEntregas(0); setPage(0); }}
+          InputLabelProps={{ shrink: true }}
+          sx={{ width: 160 }}
+        />
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => {
+            setFechaInicioFiltro("");
+            setFechaFinFiltro("");
+            setPageEntregas(0);
+            setPage(0);
+          }}
+        >
+          Limpiar filtros
+        </Button>
+      </Box>
+
       <Paper sx={theme => ({ 
         p: 3, 
         width: '100%', 
@@ -425,8 +479,9 @@ function Entregas() {
                 <TableCell>Evento</TableCell>
                 <TableCell>Solicitante</TableCell>
                 <TableCell>Artículos</TableCell>
-              <TableCell>Estatus</TableCell>
-              <TableCell>Acción</TableCell>
+                <TableCell>Fecha de Reserva</TableCell>
+                <TableCell>Estatus</TableCell>
+                <TableCell>Acción</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -449,6 +504,7 @@ function Entregas() {
                                     return s ? s.nombre : sol.solicitante;
                                   })()}</TableCell>
                                   <TableCell>{art ? art.nombre : item.articulo} ({item.cantidad})</TableCell>
+                                  <TableCell>{sol.fechaFin ? new Date(sol.fechaFin).toLocaleDateString() : ''}</TableCell>
                                   <TableCell>
                                     {hasEntrega && hasRecepcion ? <span style={{ color: '#2e7d32', fontWeight: 600 }}>Recibido</span>
                                       : hasEntrega ? <span style={{ color: '#00830e', fontWeight: 600 }}>Entregado</span>
@@ -509,7 +565,7 @@ function Entregas() {
           {/* Historial global separado: muestra todas las entregas/recepciones guardadas */}
           <Paper sx={{ p: 3, width: '100%', mb: 2 }} variant="outlined">
             <Typography variant="h6" sx={{ mb: 1 }}>Historial de Revisiones Registradas</Typography>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
               <TextField
                 size="small"
                 label="Buscar por evento"
@@ -517,6 +573,36 @@ function Entregas() {
                 onChange={e => { setSearchTerm(e.target.value); setPage(0); }}
                 sx={{ width: 320 }}
               />
+              <TextField
+                size="small"
+                label="Fecha inicio"
+                type="date"
+                value={fechaInicioFiltro}
+                onChange={e => { setFechaInicioFiltro(e.target.value); setPageEntregas(0); setPage(0); }}
+                InputLabelProps={{ shrink: true }}
+                sx={{ width: 160 }}
+              />
+              <TextField
+                size="small"
+                label="Fecha fin"
+                type="date"
+                value={fechaFinFiltro}
+                onChange={e => { setFechaFinFiltro(e.target.value); setPageEntregas(0); setPage(0); }}
+                InputLabelProps={{ shrink: true }}
+                sx={{ width: 160 }}
+              />
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  setFechaInicioFiltro("");
+                  setFechaFinFiltro("");
+                  setPageEntregas(0);
+                  setPage(0);
+                }}
+              >
+                Limpiar filtros
+              </Button>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>{/* placeholder for results count if needed */}</Typography>
             </Box>
             <TableContainer>
@@ -524,11 +610,12 @@ function Entregas() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Evento</TableCell>
+                    <TableCell>Fecha</TableCell>
                     <TableCell>Solicitante</TableCell>
                     <TableCell>Artículo</TableCell>
                     <TableCell>Cantidad</TableCell>
+                    <TableCell>Fecha de Reserva</TableCell>
                     <TableCell>Estatus</TableCell>
-                    <TableCell>Fecha</TableCell>
                     <TableCell>Observaciones</TableCell>
                   </TableRow>
                 </TableHead>
@@ -552,6 +639,7 @@ function Entregas() {
                             solicitante: solicitanteNombre,
                             articulo: art ? art.nombre : item.articulo,
                             cantidad: item.cantidad,
+                            fechaReserva: sol.fechaFin ? new Date(sol.fechaFin).toLocaleDateString() : '',
                             estatus: 'Entrega',
                             fecha: fechaEnt,
                             observaciones: revRoot.entrega.observaciones || ''
@@ -566,6 +654,7 @@ function Entregas() {
                             solicitante: solicitanteNombre,
                             articulo: art ? art.nombre : item.articulo,
                             cantidad: item.cantidad,
+                            fechaReserva: sol.fechaFin ? new Date(sol.fechaFin).toLocaleDateString() : '',
                             estatus: 'Recepción',
                             fecha: fechaRec,
                             observaciones: revRoot.recepcion.observaciones || ''
@@ -582,11 +671,12 @@ function Entregas() {
                     return paged.map((r, i) => (
                       <TableRow key={start + i}>
                         <TableCell>{r.evento}</TableCell>
+                        <TableCell>{r.fecha ? new Date(r.fecha).toLocaleString() : ''}</TableCell>
                         <TableCell>{r.solicitante}</TableCell>
                         <TableCell>{r.articulo}</TableCell>
                         <TableCell>{r.cantidad}</TableCell>
+                        <TableCell>{r.fechaReserva}</TableCell>
                         <TableCell>{r.estatus}</TableCell>
-                        <TableCell>{r.fecha ? new Date(r.fecha).toLocaleString() : ''}</TableCell>
                         <TableCell>{r.observaciones}</TableCell>
                         <TableCell>
                           <Button size="small" variant="outlined" onClick={() => {
