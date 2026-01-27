@@ -53,6 +53,10 @@ function Entregas() {
   const [pageEntregas, setPageEntregas] = useState(0);
   const rowsPerPageEntregas = 10;
   const [liberarReserva, setLiberarReserva] = useState(false);
+  const [operarioNombre, setOperarioNombre] = useState("");
+  const [operarioTelefono, setOperarioTelefono] = useState("");
+  const [operarioFirma, setOperarioFirma] = useState("");
+  const operarioSigCanvasRef = useRef(null);
 
   useEffect(() => {
     const solRef = ref(db, "solicitudes");
@@ -113,12 +117,16 @@ function Entregas() {
       setObservaciones(revTypeObj.observaciones || "");
       setFechaEntrega(revTypeObj.fechaEntrega || "");
       setHoraEntrega(revTypeObj.horaEntrega || "");
+      setOperarioNombre(revTypeObj.operarioNombre || "");
+      setOperarioTelefono(revTypeObj.operarioTelefono || "");
+      setOperarioFirma(revTypeObj.operarioFirma || "");
       setTimeout(() => {
         if (sigCanvasRef.current && rev.firma) {
           // No se puede dibujar la firma, solo mostrar la imagen
         } else if (sigCanvasRef.current) {
           sigCanvasRef.current.clear();
         }
+        if (operarioSigCanvasRef.current) operarioSigCanvasRef.current.clear();
       }, 200);
     } else {
       setRevision(itemsRevision.reduce((acc, it) => ({ ...acc, [it.key]: null }), {}));
@@ -128,8 +136,12 @@ function Entregas() {
       setObservaciones("");
       setFechaEntrega("");
       setHoraEntrega("");
+      setOperarioNombre("");
+      setOperarioTelefono("");
+      setOperarioFirma("");
       setTimeout(() => {
         if (sigCanvasRef.current) sigCanvasRef.current.clear();
+        if (operarioSigCanvasRef.current) operarioSigCanvasRef.current.clear();
       }, 200);
     }
     setOpenModal(true);
@@ -184,6 +196,12 @@ function Entregas() {
       console.log("[DEBUG] firma vacía");
       return;
     }
+    // Tomar la firma del operario
+    let operarioFirmaActual = operarioFirma;
+    if (!operarioFirmaActual && operarioSigCanvasRef.current) {
+      const dataUrl = operarioSigCanvasRef.current.getCanvas().toDataURL("image/png");
+      operarioFirmaActual = dataUrl && dataUrl.length > 50 ? dataUrl : "";
+    }
     // Validación extra: mostrar todos los datos antes de guardar
     console.log("[DEBUG] Guardando revisión:", {
       solicitudId: selectedSolicitud.id,
@@ -195,6 +213,9 @@ function Entregas() {
       fechaEntrega: fechaEntrega || "",
       horaEntrega: horaEntrega || "",
       observaciones,
+      operarioNombre,
+      operarioTelefono,
+      operarioFirma: operarioFirmaActual,
       cantidad: selectedArticulo.cantidad
     });
     try {
@@ -209,6 +230,9 @@ function Entregas() {
         fechaEntrega: fechaEntrega || "",
         horaEntrega: horaEntrega || "",
         observaciones,
+        operarioNombre,
+        operarioTelefono,
+        operarioFirma: operarioFirmaActual,
         cantidad: selectedArticulo.cantidad
       };
       // Construir el nuevo objeto por artículo y asegurarnos de limpiar 'recepcion' cuando guardamos una entrega
@@ -342,7 +366,11 @@ function Entregas() {
         setFechaEntrega("");
         setHoraEntrega("");
         setLiberarReserva(false);
+        setOperarioNombre("");
+        setOperarioTelefono("");
+        setOperarioFirma("");
         if (sigCanvasRef.current) sigCanvasRef.current.clear();
+        if (operarioSigCanvasRef.current) operarioSigCanvasRef.current.clear();
         setSuccess("Revisión de entrega guardada. Ahora en modo recepción.");
         setError("");
       }
@@ -788,6 +816,26 @@ function Entregas() {
                   </Grid>
                   <Grid item xs={12}>
                     <TextField
+                      label="Nombre del Operario"
+                      value={operarioNombre}
+                      onChange={e => !disabled && setOperarioNombre(e.target.value)}
+                      fullWidth
+                      margin="normal"
+                      disabled={disabled}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Teléfono del Operario"
+                      value={operarioTelefono}
+                      onChange={e => !disabled && setOperarioTelefono(e.target.value)}
+                      fullWidth
+                      margin="normal"
+                      disabled={disabled}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
                       label="Observaciones adicionales"
                       value={observaciones}
                       onChange={e => !disabled && setObservaciones(e.target.value)}
@@ -821,7 +869,67 @@ function Entregas() {
                     <Typography variant="body2" sx={{ mb: 1, whiteSpace: 'normal' }}>
                       Quien está solicitando operar el equipo hidráulico en forma de préstamo o alquiler al Centro de Convenciones de Costa Rica, da fé de que posee la capacitación y habilidades para operar este equipo en forma segura, y se compromete a respetar y acatar las normas de seguridad ocupacional y que además asume toda responsabilidad derivada de su operación ante cualquier daño físico o material que pueda causar. En consecuencia declara libre de toda responsabilidad a Grupo Heroica Volio y Trejos S.A. por cualquier hecho o circunstancia que se presente, tanto en el desplazamiento como en el desarrollo de la actividad, que pueda comprometer la integridad física y/o patrimonial.
                     </Typography>
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Firma autógrafa:</Typography>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Firma del Operario (Recepción y Responsabilidad):</Typography>
+                    <Box sx={{ 
+                      border: theme => `1px solid ${theme.palette.mode === 'dark' ? '#4a5568' : '#e0e0e0'}`, 
+                      borderRadius: 2, 
+                      width: '100%', 
+                      maxWidth: 560,
+                      height: 140, 
+                      background: theme => theme.palette.mode === 'dark' ? '#2d3748' : '#fff', 
+                      mb: 1, 
+                      boxShadow: theme => theme.palette.mode === 'dark' 
+                        ? 'inset 0 1px 3px rgba(0,0,0,0.2)' 
+                        : 'inset 0 1px 3px rgba(0,0,0,0.04)',
+                      overflow: 'hidden'
+                    }}>
+                      {disabled && operarioFirma ? (
+                        <img src={operarioFirma} alt="Firma Operario" style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'contain',
+                          borderRadius: 8, 
+                          background: '#fff',
+                          border: '1px solid #e0e0e0'
+                        }} />
+                      ) : (
+                        <Box sx={{ width: '100%', height: '100%' }}>
+                          <SignatureCanvas
+                            ref={operarioSigCanvasRef}
+                            penColor="#00830e"
+                            backgroundColor="#fff"
+                            canvasProps={{ 
+                              width: 520, 
+                              height: 140, 
+                              style: { 
+                                width: '100%',
+                                height: 140,
+                                borderRadius: 8, 
+                                background: '#fff' 
+                              } 
+                            }}
+                            onEnd={() => setOperarioFirma(operarioSigCanvasRef.current ? operarioSigCanvasRef.current.getCanvas().toDataURL("image/png") : "")}
+                          />
+                        </Box>
+                      )}
+                    </Box>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      {!disabled && <Button onClick={() => { operarioSigCanvasRef.current.clear(); setOperarioFirma(""); }} size="small" variant="outlined">Limpiar firma operario</Button>}
+                      {operarioFirma && !disabled && (
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="caption">Vista previa firma operario:</Typography>
+                          <img src={operarioFirma} alt="Firma Operario" style={{ 
+                            width: 180, 
+                            maxWidth: '100%',
+                            border: '1px solid #eee', 
+                            background: '#fff',
+                            borderRadius: 4,
+                            objectFit: 'contain'
+                          }} />
+                        </Box>
+                      )}
+                    </Stack>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Firma del Responsable:</Typography>
                     <Box sx={{ 
                       border: theme => `1px solid ${theme.palette.mode === 'dark' ? '#4a5568' : '#e0e0e0'}`, 
                       borderRadius: 2, 
