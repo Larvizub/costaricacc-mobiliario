@@ -1,13 +1,13 @@
-
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  Box, Typography, Paper, TextField, Button, MenuItem, Select, InputLabel, FormControl, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Dialog, DialogTitle, DialogContent, DialogActions
+  Box, Typography, Paper, TextField, Button, MenuItem, Select, InputLabel, FormControl, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress
 } from "@mui/material";
 import { Add, Delete, Edit } from "@mui/icons-material";
 import { db } from "../firebase";
 import { ref, push, onValue, get } from "firebase/database";
 import { sendMailGraph, getSolicitudHtml } from "../utils/email";
+import { searchEvent } from "../utils/skillService";
 
 function Solicitud() {
   const { user, userData } = useAuth();
@@ -25,6 +25,7 @@ function Solicitud() {
   });
   const [eventos, setEventos] = useState([]);
   const [eventoBusqueda, setEventoBusqueda] = useState("");
+  const [searchingEvent, setSearchingEvent] = useState(false);
   const [solicitantes, setSolicitantes] = useState([]);
   const [articulos, setArticulos] = useState([]);
   const [reparaciones, setReparaciones] = useState([]);
@@ -333,54 +334,74 @@ function Solicitud() {
       })}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
-            {/* Campo de búsqueda de evento, ocupa todo el ancho */}
+            {/* Campo de búsqueda de evento */}
             <Grid item xs={12}>
+              <Box display="flex" gap={1}>
                 <TextField
-                  label="Buscar evento por ID o nombre"
+                  label="Buscar evento por ID"
                   value={eventoBusqueda}
-                  onChange={e => {
-                    const val = e.target.value;
-                    setEventoBusqueda(val);
-                    // Si solo hay un resultado, autocompletar el campo Evento
-                    // Búsqueda por coincidencia de palabras o números en id o nombre
-                    const palabras = val.trim().toLowerCase().split(/\s+/);
-                    const filtrados = eventos.filter(ev => {
-                      const id = (ev.id || "").toString().toLowerCase();
-                      const nombre = (ev.nombre || "").toString().toLowerCase();
-                      // Coincidencia si todas las palabras están en id o nombre
-                      return palabras.every(palabra => id.includes(palabra) || nombre.includes(palabra));
-                    });
-                    if (filtrados.length === 1) {
-                      setForm(f => ({ ...f, evento: filtrados[0].nombre }));
-                    }
-                  }}
+                  onChange={e => setEventoBusqueda(e.target.value)}
                   fullWidth
-                  sx={{ mb: 1 }}
                 />
-              </Grid>
-            {/* Fila de selects Evento y Solicitante */}
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required>
-                <InputLabel>Evento</InputLabel>
-                <Select
-                  name="evento"
-                  value={form.evento}
-                  label="Evento"
-                  onChange={handleChange}
-                  MenuProps={{ PaperProps: { style: { maxHeight: 250 } } }}
+                <Button
+                  variant="contained"
+                  onClick={async () => {
+                    if (!eventoBusqueda.trim()) return;
+                    setSearchingEvent(true);
+                    try {
+                      const eventTitle = await searchEvent(eventoBusqueda);
+                      if (eventTitle) {
+                        setForm(f => ({ ...f, evento: eventTitle }));
+                      } else {
+                        setError("Evento no encontrado");
+                        setErrorModal(true);
+                      }
+                    } catch (err) {
+                      setError("Error al buscar evento");
+                      setErrorModal(true);
+                    }
+                    setSearchingEvent(false);
+                  }}
+                  disabled={searchingEvent}
+                  startIcon={searchingEvent ? <CircularProgress size={20} /> : null}
+                  sx={{
+                    py: 1.25,
+                    px: 3,
+                    background: 'linear-gradient(135deg, #00830e 0%, #00a819 100%)',
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
+                    color: '#fff',
+                    boxShadow: '0 4px 14px rgba(0, 131, 14, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #006b0b 0%, #008c15 100%)',
+                      boxShadow: '0 6px 20px rgba(0, 131, 14, 0.4)',
+                      transform: 'translateY(-1px)'
+                    },
+                    '&:disabled': {
+                      background: 'grey.400'
+                    },
+                    transition: 'all 0.2s ease'
+                  }}
                 >
-                  {eventos
-                    .filter(ev => {
-                      const palabras = eventoBusqueda.trim().toLowerCase().split(/\s+/);
-                      const id = (ev.id || "").toString().toLowerCase();
-                      const nombre = (ev.nombre || "").toString().toLowerCase();
-                      return palabras.every(palabra => id.includes(palabra) || nombre.includes(palabra));
-                    })
-                    .map(ev => (
-                      <MenuItem key={ev.key} value={ev.nombre}>{ev.id} - {ev.nombre}</MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
+                  {searchingEvent ? "Buscando..." : "Buscar"}
+                </Button>
+              </Box>
+            </Grid>
+            {/* Fila de Evento y Solicitante */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Evento"
+                name="evento"
+                value={form.evento}
+                onChange={handleChange}
+                fullWidth
+                required
+                InputProps={{
+                  readOnly: true,
+                }}
+              />
             </Grid>
             <Grid item xs={12} sm={6} style={{ display: 'flex', alignItems: 'flex-end' }}>
               <FormControl fullWidth required>

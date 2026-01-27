@@ -23,6 +23,7 @@
       "**/node_modules/**"
     ],
     "rewrites": [
+      { "source": "/skill/**", "function": "skill" },
       { "source": "**", "destination": "/index.html" }
     ]
   }

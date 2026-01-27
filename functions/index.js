@@ -84,3 +84,79 @@ exports.sendMailGraph = functions.https.onRequest(async (req, res) => {
     return res.status(500).send('Error interno: ' + e.message);
   }
 });
+
+// Función para proxy a Skill API
+exports.skill = functions.https.onRequest(async (req, res) => {
+  // Manejo de CORS
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  console.log('[skill] Nueva petición:', req.method, req.path, req.url, req.query);
+
+  // Aceptar cualquier ruta que contenga 'events' (rewrite puede mantener prefijo)
+  if (req.method === 'GET' && ((req.path && req.path.includes('events')) || (req.url && req.url.includes('/events')))) {
+    // Buscar eventos
+    try {
+      // Obtener token de autenticación
+      const tokenResponse = await fetch('https://grupoheroicaapi.skillsuite.net/app/wssuite/api/authenticate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'wsSk4Api',
+          password: '5qT2Uu!qIjG%$XeD',
+          companyAuthId: 'xudQREZBrfGdw0ag8tE3NR3XhM6LGa',
+          companyId: ''
+        })
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error('Error obteniendo token');
+      }
+
+      const tokenData = await tokenResponse.json();
+      if (!tokenData.success) {
+        throw new Error('Autenticación fallida');
+      }
+
+      const token = tokenData.result.token;
+
+      // Preparar body para GetEvents
+      const { eventNumber, title } = req.query;
+      const body = { Events: {} };
+      if (eventNumber) body.Events.eventNumber = eventNumber; // Enviar como string
+      if (title) body.Events.title = title;
+
+      // Llamar a GetEvents
+      const eventsResponse = await fetch('https://grupoheroicaapi.skillsuite.net/app/wssuite/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'idData': '14',
+          'companyAuthId': 'xudQREZBrfGdw0ag8tE3NR3XhM6LGa'
+        },
+        body: JSON.stringify(body)
+      });
+
+      // Pasar al cliente el status y cuerpo de la respuesta de Skill para facilitar diagnóstico
+      const respText = await eventsResponse.text();
+      try {
+        const parsed = JSON.parse(respText);
+        return res.status(eventsResponse.status).json(parsed);
+      } catch (e) {
+        return res.status(eventsResponse.status).send(respText);
+      }
+
+    } catch (error) {
+      console.error('[skill] Error:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  } else {
+    res.status(404).send('Not found');
+  }
+});
