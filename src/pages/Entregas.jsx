@@ -477,9 +477,9 @@ function Entregas() {
             <TableHead>
               <TableRow>
                 <TableCell>Evento</TableCell>
+                <TableCell>Fecha de Reserva</TableCell>
                 <TableCell>Solicitante</TableCell>
                 <TableCell>Artículos</TableCell>
-                <TableCell>Fecha de Reserva</TableCell>
                 <TableCell>Estatus</TableCell>
                 <TableCell>Acción</TableCell>
               </TableRow>
@@ -498,13 +498,15 @@ function Entregas() {
                             if (hasEntrega && hasRecepcion) return null;
                             return (
                                 <TableRow key={sol.id + '-' + item.articulo}>
-                                  <TableCell>{sol.evento}</TableCell>
-                                  <TableCell>{(() => {
-                                    const s = solicitantes.find(x => x.id === sol.solicitante);
-                                    return s ? s.nombre : sol.solicitante;
-                                  })()}</TableCell>
-                                  <TableCell>{art ? art.nombre : item.articulo} ({item.cantidad})</TableCell>
-                                  <TableCell>{sol.fechaFin ? new Date(sol.fechaFin).toLocaleDateString() : ''}</TableCell>
+                                  <TableCell>
+                                      <Typography>{sol.evento}</Typography>
+                                    </TableCell>
+                                    <TableCell>{sol.fechaFin ? new Date(sol.fechaFin).toLocaleDateString() : ''}</TableCell>
+                                    <TableCell>{(() => {
+                                      const s = solicitantes.find(x => x.id === sol.solicitante);
+                                      return s ? s.nombre : sol.solicitante;
+                                    })()}</TableCell>
+                                    <TableCell>{art ? art.nombre : item.articulo} ({item.cantidad})</TableCell>
                                   <TableCell>
                                     {hasEntrega && hasRecepcion ? <span style={{ color: '#2e7d32', fontWeight: 600 }}>Recibido</span>
                                       : hasEntrega ? <span style={{ color: '#00830e', fontWeight: 600 }}>Entregado</span>
@@ -610,13 +612,13 @@ function Entregas() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Evento</TableCell>
-                    <TableCell>Fecha</TableCell>
+                    <TableCell>Fecha de Reserva</TableCell>
                     <TableCell>Solicitante</TableCell>
                     <TableCell>Artículo</TableCell>
                     <TableCell>Cantidad</TableCell>
-                    <TableCell>Fecha de Reserva</TableCell>
                     <TableCell>Estatus</TableCell>
                     <TableCell>Observaciones</TableCell>
+                    <TableCell>Acción</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -677,11 +679,10 @@ function Entregas() {
                     return paged.map((r, i) => (
                       <TableRow key={start + i}>
                         <TableCell>{r.evento}</TableCell>
-                        <TableCell>{r.fecha ? new Date(r.fecha).toLocaleString() : ''}</TableCell>
+                        <TableCell>{r.fechaReserva}</TableCell>
                         <TableCell>{r.solicitante}</TableCell>
                         <TableCell>{r.articulo}</TableCell>
                         <TableCell>{r.cantidad}</TableCell>
-                        <TableCell>{r.fechaReserva}</TableCell>
                         <TableCell>{r.estatus}</TableCell>
                         <TableCell>{r.observaciones}</TableCell>
                         <TableCell>
