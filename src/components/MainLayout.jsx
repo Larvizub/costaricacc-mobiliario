@@ -21,7 +21,6 @@ const menuItemsAdmin = [
   { text: "Entrega Activos", icon: <AssignmentReturn />, path: "/entrega-activos" },
   { text: "Historial Rep.", icon: <History />, path: "/historial-rep" },
   { text: "Categorías", icon: <Category />, path: "/categorias" },
-  { text: "Eventos", icon: <Event />, path: "/eventos" },
   { text: "Usuarios", icon: <People />, path: "/usuarios" },
   { text: "Notificaciones", icon: <Mail />, path: "/notificaciones" },
   { text: "Preferencias", icon: <Settings />, path: "/preferencias" }
@@ -57,7 +56,6 @@ const menuItemsAreas = [
   { text: "Reparación", icon: <ChecklistOutlined />, path: "/reparacion" },
   { text: "Entrega Activos", icon: <AssignmentReturn />, path: "/entrega-activos" },
   { text: "Historial Rep.", icon: <ChecklistOutlined />, path: "/historial-rep" },
-  { text: "Eventos", icon: <Event />, path: "/eventos" },
   { text: "Usuarios", icon: <People />, path: "/usuarios" },
   { text: "Preferencias", icon: <Settings />, path: "/preferencias" },
 ];

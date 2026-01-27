@@ -16,7 +16,6 @@ const Historial = lazy(() => import("./pages/Historial"));
 const Categorias = lazy(() => import("./pages/Categorias"));
 const Usuarios = lazy(() => import("./pages/Usuarios"));
 const Preferencias = lazy(() => import("./pages/Preferencias"));
-const Eventos = lazy(() => import("./pages/Eventos"));
 const Entregas = lazy(() => import("./pages/Entregas"));
 const TiempoCarga = lazy(() => import("./pages/TiempoCarga"));
 const Notificaciones = lazy(() => import("./pages/Notificaciones"));
@@ -86,7 +85,6 @@ function App() {
                     <Route path="/historial" element={<Historial />} />
                     <Route path="/categorias" element={<Categorias />} />
                     <Route path="/usuarios" element={<Usuarios />} />
-                    <Route path="/eventos" element={<Eventos />} />
                     <Route path="/entregas" element={<Entregas />} />
                     <Route path="/tiempo-carga" element={<TiempoCarga />} />
                     <Route path="/notificaciones" element={<Notificaciones />} />
