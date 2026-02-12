@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { OAuthProvider, signInWithPopup } from "firebase/auth";
+import { OAuthProvider, signInWithPopup, signInWithRedirect } from "firebase/auth";
 import { Box, Button, TextField, Typography, Paper, Tabs, Tab, useTheme, Avatar, Divider } from "@mui/material";
 import { auth, db } from "../firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { ref, set } from "firebase/database";
-import { useNavigate } from "react-router-dom";
+import { ref, set, get } from "firebase/database";
 import { Login as LoginIcon, PersonAdd as PersonAddIcon } from "@mui/icons-material";
   // Importar useAuth y usar el contexto para navegación automática
 import { useAuth } from "../contexts/AuthContext";
@@ -19,20 +18,25 @@ function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [nombre, setNombre] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [isMicrosoftLoading, setIsMicrosoftLoading] = useState(false);
 
   // Login con Microsoft usando el proveedor oficial de Firebase
   const handleMicrosoftLogin = async () => {
+    if (isMicrosoftLoading) return;
+
     setError("");
+    setIsMicrosoftLoading(true);
+
+    const provider = new OAuthProvider('microsoft.com');
+    provider.setCustomParameters({ prompt: 'select_account' });
+
     try {
-      const provider = new OAuthProvider('microsoft.com');
-      provider.setCustomParameters({ prompt: 'select_account' });
-      // provider.addScope('User.Read'); // Puedes agregar scopes si lo necesitas
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
       // Guardar en la base de datos si es la primera vez
       const userRef = ref(db, `usuarios/${user.uid}`);
-      const snap = await import("firebase/database").then(m => m.get(userRef));
+      const snap = await get(userRef);
       if (!snap.exists()) {
         await set(userRef, {
           nombre: user.displayName || user.email,
@@ -49,17 +53,22 @@ function LoginPage() {
       }
       // La navegación la gestiona el AuthContext
     } catch (e) {
-      setError("No se pudo iniciar sesión con Microsoft");
+      if (e?.code === "auth/popup-blocked" || e?.code === "auth/cancelled-popup-request") {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+
+      if (e?.code === "auth/popup-closed-by-user") {
+        setError("El inicio de sesión fue cancelado. Inténtalo de nuevo.");
+      } else {
+        setError("No se pudo iniciar sesión con Microsoft");
+      }
+    } finally {
+      setIsMicrosoftLoading(false);
     }
   };
 
-  const { user, loading } = useAuth();
-
-  React.useEffect(() => {
-    if (!loading && user) {
-      navigate("/dashboard");
-    }
-  }, [user, loading, navigate]);
+  const { loading } = useAuth();
 
   const handleLogin = async () => {
     try {
@@ -173,6 +182,7 @@ return (
           transition: 'all 0.3s ease'
         }}
         onClick={handleMicrosoftLogin}
+        disabled={isMicrosoftLoading || loading}
         fullWidth
         startIcon={
           <svg width="20" height="20" viewBox="0 0 24 24">
@@ -183,7 +193,7 @@ return (
           </svg>
         }
       >
-        Ingresar con Microsoft
+        {isMicrosoftLoading ? "Ingresando..." : "Ingresar con Microsoft"}
       </Button>
 
       <Divider sx={{ my: 3 }}>

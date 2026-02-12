@@ -3,8 +3,6 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { ref, get, set } from "firebase/database";
-import { msalInstance } from "./MicrosoftAuth";
-import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
@@ -19,7 +17,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null); // { type: 'firebase'|'microsoft', ...user }
   const [userData, setUserData] = useState(null); // datos extendidos
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   // Gestión de inactividad
   useEffect(() => {
@@ -59,94 +56,65 @@ export function AuthProvider({ children }) {
 
   // Detectar sesión de Firebase
   useEffect(() => {
+    let isMounted = true;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          type: "firebase",
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName || null
-        });
-        // admin@costaricacc.com siempre es admin
+      if (!isMounted) return;
+
+      if (!firebaseUser) {
+        setUser(null);
+        setUserData(null);
+        setLoading(false);
+        return;
+      }
+
+      setUser({
+        type: "firebase",
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || null
+      });
+
+      try {
         if (firebaseUser.email === "admin@costaricacc.com") {
           setUserData({ rol: "administrador", email: firebaseUser.email, nombre: "Administrador" });
         } else {
           const snap = await get(ref(db, `usuarios/${firebaseUser.uid}`));
+          if (!isMounted) return;
+
           if (snap.exists()) {
             setUserData(snap.val());
           } else {
-            setUserData(null);
+            const newUser = {
+              nombre: firebaseUser.displayName || firebaseUser.email,
+              email: firebaseUser.email,
+              rol: "cliente"
+            };
+            await set(ref(db, `usuarios/${firebaseUser.uid}`), newUser);
+            await set(ref(db, `solicitantes/${firebaseUser.uid}`), newUser);
+            if (!isMounted) return;
+            setUserData(newUser);
           }
         }
-        setLoading(false);
-      } else {
-        // Si no hay usuario de Firebase, verificar Microsoft
-        checkMicrosoftSession();
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     });
-    return unsubscribe;
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
     // eslint-disable-next-line
   }, []);
 
-  // Verificar sesión Microsoft (MSAL)
-  const checkMicrosoftSession = async () => {
-    try {
-      await msalInstance.initialize();
-      const accounts = msalInstance.getAllAccounts();
-      if (accounts && accounts.length > 0) {
-        const account = accounts[0];
-        const userId = account.homeAccountId.replace(/\W/g, "");
-        setUser({
-          type: "microsoft",
-          uid: userId,
-          email: account.username,
-          displayName: account.name || account.username
-        });
-        // Buscar datos extendidos en la base de datos
-        const userRef = ref(db, `usuarios/${userId}`);
-        const solRef = ref(db, `solicitantes/${userId}`);
-        const snap = await get(userRef);
-        if (snap.exists()) {
-          setUserData(snap.val());
-        } else {
-          // Crear usuario en usuarios y solicitantes con rol "areas" por defecto
-          const newUser = {
-            nombre: account.name || account.username,
-            email: account.username,
-            rol: "areas"
-          };
-          await set(userRef, newUser);
-          await set(solRef, newUser);
-          setUserData(newUser);
-        }
-      } else {
-        setUser(null);
-        setUserData(null);
-      }
-    } catch (e) {
-      setUser(null);
-      setUserData(null);
-    }
-    setLoading(false);
-  };
-
   // Logout unificado
   const logout = async () => {
-    if (user?.type === "firebase") {
-      await firebaseSignOut(auth);
-      setUser(null);
-      setUserData(null);
-      navigate("/login");
-    } else if (user?.type === "microsoft") {
-      // Cerrar sesión MSAL y limpiar cuentas
-      const accounts = msalInstance.getAllAccounts();
-      if (accounts.length > 0) {
-        await msalInstance.logoutPopup({ account: accounts[0] });
-      }
-      setUser(null);
-      setUserData(null);
-      navigate("/login");
-    }
+    await firebaseSignOut(auth);
+    setUser(null);
+    setUserData(null);
   };
 
   return (
