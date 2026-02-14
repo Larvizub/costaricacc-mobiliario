@@ -7,6 +7,8 @@ import { ref, get, set } from "firebase/database";
 const AuthContext = createContext();
 
 const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000; // 2 horas en milisegundos
+const LAST_ACTIVITY_KEY = "lastActivity";
+const LAST_ACTIVITY_USER_KEY = "lastActivityUser";
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -23,11 +25,20 @@ export function AuthProvider({ children }) {
     if (!user) return;
 
     const resetTimer = () => {
-      localStorage.setItem("lastActivity", Date.now().toString());
+      localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+      localStorage.setItem(LAST_ACTIVITY_USER_KEY, user.uid || user.email || "");
     };
 
     const checkInactivity = () => {
-      const lastActivity = localStorage.getItem("lastActivity");
+      const trackedUser = localStorage.getItem(LAST_ACTIVITY_USER_KEY);
+      const currentUser = user.uid || user.email || "";
+
+      if (!trackedUser || trackedUser !== currentUser) {
+        resetTimer();
+        return;
+      }
+
+      const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY);
       if (lastActivity) {
         const diff = Date.now() - parseInt(lastActivity);
         if (diff > INACTIVITY_TIMEOUT) {
@@ -45,8 +56,8 @@ export function AuthProvider({ children }) {
     // Verificar cada minuto si ha excedido el tiempo
     const interval = setInterval(checkInactivity, 60000);
 
-    // Verificación inmediata al cargar/cambiar usuario (cubre si el navegador estuvo cerrado)
-    checkInactivity();
+    // Al iniciar una nueva sesión del usuario actual, reiniciar actividad para evitar cierres inmediatos
+    resetTimer();
 
     return () => {
       events.forEach((name) => document.removeEventListener(name, resetTimer));
@@ -96,6 +107,14 @@ export function AuthProvider({ children }) {
             setUserData(newUser);
           }
         }
+      } catch (err) {
+        if (!isMounted) return;
+        console.error("[AuthContext] Error cargando/creando datos de usuario:", err);
+        setUserData({
+          nombre: firebaseUser.displayName || firebaseUser.email,
+          email: firebaseUser.email,
+          rol: "cliente"
+        });
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -113,6 +132,8 @@ export function AuthProvider({ children }) {
   // Logout unificado
   const logout = async () => {
     await firebaseSignOut(auth);
+    localStorage.removeItem(LAST_ACTIVITY_KEY);
+    localStorage.removeItem(LAST_ACTIVITY_USER_KEY);
     setUser(null);
     setUserData(null);
   };
