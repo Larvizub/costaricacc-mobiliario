@@ -38,7 +38,7 @@ function Autorizacion() {
     const solisRef = ref(db, "solicitantes");
     const unsubSolis = onValue(solisRef, snap => {
       const data = snap.val() || {};
-      setSolicitantes(Object.entries(data).map(([id, value]) => ({ id, nombre: value.nombre })));
+      setSolicitantes(Object.entries(data).map(([id, value]) => ({ id, nombre: value.nombre, email: value.email || "" })));
     });
     const eventosRef = ref(db, "eventos");
     const unsubEventos = onValue(eventosRef, snap => {
@@ -67,7 +67,17 @@ function Autorizacion() {
     setApproveDialog({ open: false, id: null, comment: '' });
   };
   const handleRechazar = async (id) => {
-    await update(ref(db, `solicitudes/${id}`), { estado: "rechazada", rechazoObs });
+    const solicitudSnap = await get(ref(db, `solicitudes/${id}`));
+    const solicitud = solicitudSnap.exists() ? solicitudSnap.val() : null;
+    const detalleLiberado = (solicitud?.detalle || []).map(item => ({ ...item, liberado: true }));
+
+    await update(ref(db, `solicitudes/${id}`), {
+      estado: "rechazada",
+      rechazoObs,
+      detalle: detalleLiberado,
+      rechazadaPor: user?.uid || user?.email || null,
+      rechazadaEn: new Date().toISOString()
+    });
     notificarCambioEstatus(id, "rechazada");
     setModal(false);
     setRechazoObs("");
@@ -406,8 +416,8 @@ function Autorizacion() {
                     color: '#fff',
                     fontWeight: 600,
                     backgroundColor:
-                      sol.estado === 'autorizado' ? '#43a047' :
-                      sol.estado === 'rechazado' ? '#e53935' :
+                      (sol.estado === 'autorizado' || sol.estado === 'autorizada' || sol.estado === 'aprobada' || sol.estado === 'aprobado') ? '#43a047' :
+                      (sol.estado === 'rechazado' || sol.estado === 'rechazada') ? '#e53935' :
                       sol.estado === 'pendiente' || !sol.estado ? '#fbc02d' :
                       '#90a4ae'
                   }}>

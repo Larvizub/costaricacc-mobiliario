@@ -129,8 +129,8 @@ function Historial() {
                       color: '#fff',
                       fontWeight: 600,
                       backgroundColor:
-                        sol.estado === 'autorizado' ? '#43a047' :
-                        sol.estado === 'rechazado' ? '#e53935' :
+                        (sol.estado === 'autorizado' || sol.estado === 'autorizada' || sol.estado === 'aprobada' || sol.estado === 'aprobado') ? '#43a047' :
+                        (sol.estado === 'rechazado' || sol.estado === 'rechazada') ? '#e53935' :
                         sol.estado === 'pendiente' || !sol.estado ? '#fbc02d' :
                         '#90a4ae'
                     }}>

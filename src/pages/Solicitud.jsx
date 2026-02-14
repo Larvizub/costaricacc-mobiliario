@@ -109,96 +109,122 @@ function Solicitud() {
     setDetalle(arr => arr.filter((_, i) => i !== idx));
   };
 
+  const estadosNoBloqueantes = new Set([
+    "rechazada",
+    "rechazado",
+    "cancelada",
+    "cancelado",
+    "eliminada",
+    "eliminado",
+    "completada",
+    "completado"
+  ]);
+
+  const toDateTime = (fecha, hora) => {
+    const dt = new Date(`${fecha}T${hora}`);
+    return Number.isNaN(dt.getTime()) ? null : dt;
+  };
+
+  const solicitudBloqueaInventario = (solicitud) => {
+    const estado = (solicitud?.estado || "pendiente").toString().trim().toLowerCase();
+    return !estadosNoBloqueantes.has(estado);
+  };
+
   // Verificar disponibilidad de mobiliario y devolver detalles de conflicto
   const verificarDisponibilidad = async () => {
     const solRef = ref(db, "solicitudes");
     const tiemposRef = ref(db, "tiemposCarga");
-    
-    return new Promise(resolve => {
-      onValue(solRef, async snap => {
-        const data = snap.val() || {};
-        
-        // Obtener tiempos de carga
-        const tiemposSnap = await get(tiemposRef);
-        const tiemposCarga = tiemposSnap.exists() ? Object.values(tiemposSnap.val()) : [];
-        
-        let disponible = true;
-        let conflicto = null;
-        
-        for (const d of detalle) {
-          const articulo = articulos.find(a => a.id === d.articulo);
-          if (!articulo) continue;
-          
-          let apartadas = 0;
-          let fechasConflicto = [];
-          
-          // Verificar conflictos con otras solicitudes
-          Object.values(data).forEach(sol => {
-            const inicioA = new Date(form.fechaInicio + 'T' + form.horaInicio);
-            const finA = new Date(form.fechaFin + 'T' + form.horaFin);
-            const inicioB = new Date(sol.fechaInicio + 'T' + sol.horaInicio);
-            const finB = new Date(sol.fechaFin + 'T' + sol.horaFin);
-            if (finA >= inicioB && inicioA <= finB) {
-              let cantidadSol = 0;
-              (sol.detalle || []).forEach(item => {
-                if (item.articulo === d.articulo && !item.liberado) {
-                  cantidadSol += parseInt(item.cantidad);
-                }
-              });
-              if (cantidadSol > 0) {
-                fechasConflicto.push({
-                  fechaInicio: sol.fechaInicio,
-                  fechaFin: sol.fechaFin,
-                  evento: sol.evento || "-",
-                  tipo: "solicitud"
-                });
-                apartadas += cantidadSol;
-              }
+
+    const [solSnap, tiemposSnap] = await Promise.all([get(solRef), get(tiemposRef)]);
+    const solicitudes = solSnap.exists() ? Object.values(solSnap.val()) : [];
+    const tiemposCarga = tiemposSnap.exists() ? Object.values(tiemposSnap.val()) : [];
+
+    const inicioReserva = toDateTime(form.fechaInicio, form.horaInicio);
+    const finReserva = toDateTime(form.fechaFin, form.horaFin);
+
+    if (!inicioReserva || !finReserva || finReserva < inicioReserva) {
+      return {
+        disponible: false,
+        conflicto: {
+          articulo: "Fechas de la solicitud",
+          disponible: 0,
+          fechas: []
+        }
+      };
+    }
+
+    for (const d of detalle) {
+      const articulo = articulos.find(a => a.id === d.articulo);
+      if (!articulo) continue;
+
+      let apartadas = 0;
+      const fechasConflicto = [];
+
+      for (const sol of solicitudes) {
+        if (!solicitudBloqueaInventario(sol)) continue;
+
+        const inicioSol = toDateTime(sol.fechaInicio, sol.horaInicio);
+        const finSol = toDateTime(sol.fechaFin, sol.horaFin);
+        if (!inicioSol || !finSol) continue;
+
+        if (finReserva >= inicioSol && inicioReserva <= finSol) {
+          let cantidadSol = 0;
+          for (const item of (sol.detalle || [])) {
+            if (item.articulo === d.articulo && !item.liberado) {
+              cantidadSol += Number(item.cantidad) || 0;
             }
-          });
-          
-          // Verificar conflictos con tiempos de carga
-          tiemposCarga.forEach(tc => {
-            if (tc.articuloId === d.articulo) {
-              const inicioA = new Date(form.fechaInicio + 'T' + form.horaInicio);
-              const finA = new Date(form.fechaFin + 'T' + form.horaFin);
-              const inicioB = new Date(tc.fechaInicio + 'T' + tc.horaInicio);
-              const finB = new Date(tc.fechaFin + 'T' + tc.horaFin);
-              
-              if (finA >= inicioB && inicioA <= finB) {
-                fechasConflicto.push({
-                  fechaInicio: tc.fechaInicio,
-                  fechaFin: tc.fechaFin,
-                  evento: "Tiempo de Carga",
-                  tipo: "carga",
-                  observaciones: tc.observaciones || ""
-                });
-                // Durante tiempo de carga, todo el inventario está bloqueado
-                apartadas += parseInt(articulo.cantidad);
-              }
-            }
-          });
-          
-          // Calcular total disponible: Cantidad - Revisión
-          const revisionCount = reparaciones
-            .filter(r => r.id === articulo.id)
-            .reduce((sum, r) => sum + (Number(r.revision) || 0), 0);
-          const totalDisponible = parseInt(articulo.cantidad) - revisionCount;
-          const disponibleActual = totalDisponible - apartadas;
-          
-          if (parseInt(d.cantidad) > disponibleActual) {
-            disponible = false;
-            conflicto = {
-              articulo: articulo.nombre,
-              disponible: disponibleActual < 0 ? 0 : disponibleActual,
-              fechas: fechasConflicto
-            };
-            break;
+          }
+
+          if (cantidadSol > 0) {
+            fechasConflicto.push({
+              fechaInicio: sol.fechaInicio,
+              fechaFin: sol.fechaFin,
+              evento: sol.evento || "-",
+              tipo: "solicitud"
+            });
+            apartadas += cantidadSol;
           }
         }
-        resolve({ disponible, conflicto });
-      }, { onlyOnce: true });
-    });
+      }
+
+      for (const tc of tiemposCarga) {
+        if (tc.articuloId !== d.articulo) continue;
+
+        const inicioCarga = toDateTime(tc.fechaInicio, tc.horaInicio);
+        const finCarga = toDateTime(tc.fechaFin, tc.horaFin);
+        if (!inicioCarga || !finCarga) continue;
+
+        if (finReserva >= inicioCarga && inicioReserva <= finCarga) {
+          fechasConflicto.push({
+            fechaInicio: tc.fechaInicio,
+            fechaFin: tc.fechaFin,
+            evento: "Tiempo de Carga",
+            tipo: "carga",
+            observaciones: tc.observaciones || ""
+          });
+          apartadas += Number(articulo.cantidad) || 0;
+        }
+      }
+
+      const revisionCount = reparaciones
+        .filter(r => r.id === articulo.id)
+        .reduce((sum, r) => sum + (Number(r.revision) || 0), 0);
+      const totalDisponible = (Number(articulo.cantidad) || 0) - revisionCount;
+      const disponibleActual = totalDisponible - apartadas;
+
+      if ((Number(d.cantidad) || 0) > disponibleActual) {
+        return {
+          disponible: false,
+          conflicto: {
+            articulo: articulo.nombre,
+            disponible: disponibleActual < 0 ? 0 : disponibleActual,
+            fechas: fechasConflicto
+          }
+        };
+      }
+    }
+
+    return { disponible: true, conflicto: null };
   };
 
   // Guardar solicitud
@@ -211,6 +237,13 @@ function Solicitud() {
       if (!form.evento || !form.solicitante || !form.fechaInicio || !form.horaInicio || !form.fechaFin || !form.horaFin || !form.entrega || detalle.length === 0) {
         setError("Completa todos los campos obligatorios y agrega al menos un artículo.");
         console.error('[Solicitud] Error: campos obligatorios faltantes');
+        return;
+      }
+      const inicioReserva = toDateTime(form.fechaInicio, form.horaInicio);
+      const finReserva = toDateTime(form.fechaFin, form.horaFin);
+      if (!inicioReserva || !finReserva || finReserva < inicioReserva) {
+        setError("La fecha/hora final debe ser mayor o igual a la fecha/hora inicial.");
+        setErrorModal(true);
         return;
       }
       const { disponible, conflicto } = await verificarDisponibilidad();
