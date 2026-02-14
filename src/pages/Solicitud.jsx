@@ -11,7 +11,6 @@ import { searchEvent } from "../utils/skillService";
 
 function Solicitud() {
   const { user, userData } = useAuth();
-  // Permitir que cualquier usuario autenticado cree solicitudes (sin restricción por rol)
   const canCreateSolicitud = !!user;
   const [form, setForm] = useState({
     evento: "",
