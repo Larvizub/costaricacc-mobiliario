@@ -289,6 +289,9 @@ function Autorizacion() {
     );
     if (!matchBusqueda) return false;
 
+    const estadoNormalizado = (sol.estado || "pendiente").toLowerCase();
+    const esPendiente = estadoNormalizado === "pendiente";
+
     // Filtrado por rol
     if (userData?.rol === "administrador" || user?.email === "admin@costaricacc.com") {
       return true; // Admin ve todo
@@ -303,10 +306,10 @@ function Autorizacion() {
     const idAreas = categorias.find(c => c.nombre.trim().toLowerCase() === "áreas y montajes")?.id;
     const idInfra = categorias.find(c => c.nombre.trim().toLowerCase() === "infraestructura")?.id;
     if (userData?.rol === "areas" && idAreas) {
-      return categoriasSolicitud.includes(idAreas);
+      return esPendiente && categoriasSolicitud.includes(idAreas);
     }
     if (userData?.rol === "infraestructura" && idInfra) {
-      return categoriasSolicitud.includes(idInfra);
+      return esPendiente && categoriasSolicitud.includes(idInfra);
     }
     return false;
   });
