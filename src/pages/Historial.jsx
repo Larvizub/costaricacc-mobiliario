@@ -43,7 +43,7 @@ function Historial() {
 
   useEffect(() => { setPage(0); }, [busqueda]);
 
-  const canDelete = userData?.rol === "areas" || userData?.rol === "administrador" || (user && user.email === "admin@costaricacc.com");
+  const canDelete = userData?.rol === "areas" || userData?.rol === "infraestructura" || userData?.rol === "administrador" || (user && user.email === "admin@costaricacc.com");
 
   const handleEliminar = async (id) => {
     const confirmar = window.confirm("¿Confirma eliminar esta solicitud? Esta acción no se puede deshacer.");
