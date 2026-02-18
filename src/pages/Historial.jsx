@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import {
-  Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, TablePagination
+  Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, TablePagination, IconButton
 } from "@mui/material";
+import { Delete } from "@mui/icons-material";
 import { db } from "../firebase";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, remove } from "firebase/database";
 
 function Historial() {
+  const { user, userData } = useAuth();
   const [solicitudes, setSolicitudes] = useState([]);
   const [solicitantes, setSolicitantes] = useState([]);
   const [eventos, setEventos] = useState([]);
@@ -40,6 +43,18 @@ function Historial() {
 
   useEffect(() => { setPage(0); }, [busqueda]);
 
+  const canDelete = userData?.rol === "areas" || userData?.rol === "administrador" || (user && user.email === "admin@costaricacc.com");
+
+  const handleEliminar = async (id) => {
+    const confirmar = window.confirm("¿Confirma eliminar esta solicitud? Esta acción no se puede deshacer.");
+    if (!confirmar) return;
+    try {
+      await remove(ref(db, `solicitudes/${id}`));
+    } catch (error) {
+      alert("No se pudo eliminar la solicitud.");
+    }
+  };
+
   const filteredSolicitudes = solicitudes.filter(sol => {
     const s = solicitantes.find(x => x.id === sol.solicitante);
     const nombreSolicitante = s ? s.nombre : sol.solicitante;
@@ -73,6 +88,7 @@ function Historial() {
               <TableCell sx={{ fontWeight: 600 }}>Fechas</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Observaciones</TableCell>
+              {canDelete && <TableCell sx={{ fontWeight: 600 }} align="right">Acciones</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -80,7 +96,7 @@ function Historial() {
               if (!filteredSolicitudes || filteredSolicitudes.length === 0) {
                 return (
                   <TableRow>
-                    <TableCell colSpan={7}><Typography variant="caption">No hay resultados.</Typography></TableCell>
+                    <TableCell colSpan={canDelete ? 8 : 7}><Typography variant="caption">No hay resultados.</Typography></TableCell>
                   </TableRow>
                 );
               }
@@ -138,6 +154,13 @@ function Historial() {
                     </span>
                   </TableCell>
                   <TableCell>{sol.observaciones}</TableCell>
+                  {canDelete && (
+                    <TableCell align="right">
+                      <IconButton color="error" onClick={() => handleEliminar(sol.id)} title="Eliminar">
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+                  )}
                 </TableRow>
               ));
             })()}
