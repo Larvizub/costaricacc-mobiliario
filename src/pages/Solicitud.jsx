@@ -38,6 +38,9 @@ function Solicitud() {
   const [success, setSuccess] = useState("");
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [lastSolicitudId, setLastSolicitudId] = useState(null);
+  const [showInfraPriorityNotice, setShowInfraPriorityNotice] = useState(false);
+
+  const INFRA_PRIORITY_NOTICE = "PRIORIDAD DE USO PARA EL DEPARTAMENTO DE INFRAESTRUCTURA EN CASO DE EMERGENCIA: El departamento de Infraestructura se reserva el derecho de facilitar el equipo según corresponda. Asimismo, mantiene la disposición total del mismo para su utilización exclusiva en caso de emergencias o eventualidades que así lo requieran.";
 
   // Cargar solicitantes, artículos, categorías y eventos
   useEffect(() => {
@@ -321,6 +324,8 @@ function Solicitud() {
             })),
             solicitanteNombre: solicitanteObj ? solicitanteObj.nombre : form.solicitante
           },
+          avisoInfra: esInfra,
+          avisoInfraTexto: INFRA_PRIORITY_NOTICE,
           logoUrlHeroica,
           logoUrlCCCR
         });
@@ -344,6 +349,7 @@ function Solicitud() {
       });
       const newKey = newRef.key || null;
       setLastSolicitudId(newKey);
+      setShowInfraPriorityNotice(esInfra);
       setSuccess("Solicitud registrada correctamente.");
       setConfirmModalOpen(true);
       setForm({ evento: "", solicitante: "", fechaInicio: "", horaInicio: "", fechaFin: "", horaFin: "", entrega: "", observaciones: "" });
@@ -684,6 +690,11 @@ function Solicitud() {
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
           <Typography>La solicitud se procesó correctamente.</Typography>
+          {showInfraPriorityNotice && (
+            <Typography sx={{ mt: 2, fontWeight: 600, color: 'warning.dark' }}>
+              {INFRA_PRIORITY_NOTICE}
+            </Typography>
+          )}
           {lastSolicitudId && (
             <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>ID de la solicitud: {lastSolicitudId}</Typography>
           )}
@@ -693,6 +704,7 @@ function Solicitud() {
           <Button 
             onClick={() => {
               setConfirmModalOpen(false);
+              setShowInfraPriorityNotice(false);
               // reset form para iniciar otra solicitud
               setForm({ evento: "", solicitante: "", fechaInicio: "", horaInicio: "", fechaFin: "", horaFin: "", entrega: "", observaciones: "" });
               setDetalle([]);

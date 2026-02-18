@@ -35,7 +35,7 @@ export async function sendMailGraph({ toEmails, subject, html }) {
 // Plantilla para notificación de nueva solicitud
 
 
-export function getSolicitudHtml({ solicitud, logoUrlHeroica, logoUrlCCCR }) {
+export function getSolicitudHtml({ solicitud, logoUrlHeroica, logoUrlCCCR, avisoInfra = false, avisoInfraTexto = "" }) {
   return `
     <div style="font-family: 'Segoe UI', 'Montserrat', 'Poppins', Arial, sans-serif; background: #f7fafc; padding: 0; border-radius: 18px; max-width: 650px; margin: auto; box-shadow: 0 4px 24px #0001;">
       <div style="background: #fff; border-radius: 18px 18px 0 0; padding: 32px 32px 18px 32px; text-align: center; border-bottom: 1px solid #e0e0e0;">
@@ -59,6 +59,11 @@ export function getSolicitudHtml({ solicitud, logoUrlHeroica, logoUrlCCCR }) {
               `).join('')}
             </ul>
           </div>
+          ${avisoInfra ? `
+            <div style="margin-top: 16px; background: #fff8e1; border: 1px solid #fbc02d; border-radius: 8px; padding: 12px; color: #7a5a00; font-weight: 600;">
+              ${avisoInfraTexto}
+            </div>
+          ` : ''}
         </div>
       </div>
       <div style="background: #fff; border-radius: 0 0 18px 18px; padding: 18px 32px 24px 32px; text-align: center; border-top: 1px solid #e0e0e0;">
