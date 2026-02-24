@@ -8,6 +8,10 @@ Este directorio contiene el backend para el envío de correos mediante Microsoft
 - `.eslintrc.js`: Reglas de linting.
 - `.gitignore`: Exclusiones para control de versiones.
 
+## Funciones incluidas
+- `sendMailGraph` (HTTPS): endpoint para enviar correos vía Microsoft Graph desde el frontend.
+- `sendReservaRemindersOneWeekBefore` (programada): ejecuta diariamente y envía recordatorios automáticos cuando una reserva inicia en 7 días, separando envíos por pool de Mobiliario e Infraestructura y evitando duplicados por solicitud/pool.
+
 ## Variables de entorno necesarias
 Configura en Firebase:
 - `microsoft.client_id`
