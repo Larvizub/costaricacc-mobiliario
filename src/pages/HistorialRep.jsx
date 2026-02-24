@@ -41,13 +41,23 @@ function HistorialRep() {
   };
 
   // Filtrar historial según búsqueda y categoría
-  const filteredHistorial = historial.filter(rep => {
-    const nombreCat = categorias.find(c => c.id === rep.categoria)?.nombre || "";
-    const text = search.trim().toLowerCase();
-    const matchesSearch = !text || rep.nombre.toLowerCase().includes(text) || nombreCat.toLowerCase().includes(text);
-    const matchesCategory = !categoryFilter || rep.categoria === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const getRepTimestamp = (rep) => {
+    if (rep?.fechaProcesamiento) {
+      const ts = new Date(rep.fechaProcesamiento).getTime();
+      if (!Number.isNaN(ts)) return ts;
+    }
+    return 0;
+  };
+
+  const filteredHistorial = historial
+    .filter(rep => {
+      const nombreCat = categorias.find(c => c.id === rep.categoria)?.nombre || "";
+      const text = search.trim().toLowerCase();
+      const matchesSearch = !text || rep.nombre.toLowerCase().includes(text) || nombreCat.toLowerCase().includes(text);
+      const matchesCategory = !categoryFilter || rep.categoria === categoryFilter;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => getRepTimestamp(b) - getRepTimestamp(a));
 
   useEffect(() => {
     setPage(0);
