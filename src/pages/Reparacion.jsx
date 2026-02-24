@@ -12,11 +12,21 @@ import { sendSolicitudReparacionEmail, sendEntregaActivosEmail } from "../utils/
 function Reparacion() {
   const { user, userData } = useAuth();
   const userEmail = userData?.email || user?.email;
+  const normalizeText = (value = "") => value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
   // Normalizar rol para evitar problemas de mayúsculas/espacios y variantes
-  const role = userData?.rol?.toString().trim().toLowerCase() || '';
+  const role = normalizeText(userData?.rol || '');
   console.log('[Reparacion] Component initialized. userData:', userData, 'userEmail:', userEmail, 'normalizedRole:', role);
-  const canEditTable = role === 'infraestructura' || role === 'administrador' || role === 'infra';
-  const canAddItems = role === 'areas' || role === 'administrador' || role === 'áreas' || role === 'area';
+  const isAdmin = role === 'administrador' || (user && user.email === 'admin@costaricacc.com');
+  const isAreas = role === 'areas' || role === 'area';
+  const isInfra = role === 'infraestructura' || role === 'infra';
+  const canEditTable = isInfra || isAdmin;
+  const canAddItems = isAreas || isAdmin;
   // Visibilidad basada en autenticación (se usa `user`/`userData` directamente donde haga falta)
   const [articulos, setArticulos] = useState([]);
   const [reparaciones, setReparaciones] = useState([]);
@@ -203,8 +213,19 @@ function Reparacion() {
     }
   };
   // Agrupar reparaciones por artículo para la tabla de aprobación
+  const canViewReparacion = (rep) => {
+    if (isAdmin) return true;
+    const categoriaNombre = normalizeText(categorias.find((c) => c.id === rep.categoria)?.nombre || "");
+    if (isAreas) return categoriaNombre === 'areas y montajes';
+    if (isInfra) return categoriaNombre === 'infraestructura';
+    return false;
+  };
+
   const groupedReparaciones = Object.values(
     reparaciones.reduce((acc, rep, idx) => {
+      if (!canViewReparacion(rep)) {
+        return acc;
+      }
       const key = rep.id;
       if (!acc[key]) {
         acc[key] = {

@@ -13,6 +13,7 @@ function Historial() {
   const [solicitantes, setSolicitantes] = useState([]);
   const [eventos, setEventos] = useState([]);
   const [articulos, setArticulos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -50,12 +51,29 @@ function Historial() {
       const data = snap.val() || {};
       setArticulos(Object.entries(data).map(([id, value]) => ({ id, ...value })));
     });
-    return () => { unsub(); unsubSolis(); unsubEventos(); unsubArt(); };
+    const categoriasRef = ref(db, "categorias");
+    const unsubCategorias = onValue(categoriasRef, snap => {
+      const data = snap.val() || {};
+      setCategorias(Object.entries(data).map(([id, value]) => ({ id, nombre: value.nombre || "" })));
+    });
+    return () => { unsub(); unsubSolis(); unsubEventos(); unsubArt(); unsubCategorias(); };
   }, []);
 
   useEffect(() => { setPage(0); }, [busqueda]);
 
-  const canManage = userData?.rol === "areas" || userData?.rol === "infraestructura" || userData?.rol === "administrador" || (user && user.email === "admin@costaricacc.com");
+  const normalizeText = (value = "") => value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  const role = normalizeText(userData?.rol || "");
+  const isAdmin = role === "administrador" || (user && user.email === "admin@costaricacc.com");
+  const isAreas = role === "areas" || role === "area";
+  const isInfra = role === "infraestructura" || role === "infra";
+
+  const canManage = isAreas || isInfra || isAdmin;
 
   const handleEliminar = async (id) => {
     const confirmar = window.confirm("¿Confirma eliminar esta solicitud? Esta acción no se puede deshacer.");
@@ -153,11 +171,35 @@ function Historial() {
     const s = solicitantes.find(x => x.id === sol.solicitante);
     const nombreSolicitante = s ? s.nombre : sol.solicitante;
     const estado = sol.estado || "pendiente";
-    return (
+    const matchBusqueda = (
       sol.evento?.toLowerCase().includes(busqueda.toLowerCase()) ||
       nombreSolicitante?.toLowerCase().includes(busqueda.toLowerCase()) ||
       estado?.toLowerCase().includes(busqueda.toLowerCase())
     );
+
+    if (!matchBusqueda) return false;
+    if (isAdmin) return true;
+
+    if (isAreas || isInfra) {
+      const categoriasSolicitud = (sol.detalle || [])
+        .map((item) => {
+          const articulo = articulos.find((a) => a.id === item.articulo);
+          if (!articulo?.categoria) return "";
+          const categoriaObj = categorias.find((c) => c.id === articulo.categoria);
+          return normalizeText(categoriaObj?.nombre || "");
+        })
+        .filter(Boolean);
+
+      if (isAreas) {
+        return categoriasSolicitud.includes("areas y montajes");
+      }
+
+      if (isInfra) {
+        return categoriasSolicitud.includes("infraestructura");
+      }
+    }
+
+    return true;
   });
 
   return (
