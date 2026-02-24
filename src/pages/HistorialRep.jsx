@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField, FormControl, InputLabel, Select, MenuItem, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField, FormControl, InputLabel, Select, MenuItem, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions, TablePagination } from "@mui/material";
 import { db } from "../firebase";
 import { ref, onValue } from "firebase/database";
 
@@ -8,8 +8,10 @@ function HistorialRep() {
   const [categorias, setCategorias] = useState([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [page, setPage] = useState(0);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState(null);
+  const rowsPerPage = 10;
 
   useEffect(() => {
     // Leer datos de recepciones procesadas desde historialProcesamiento
@@ -46,6 +48,15 @@ function HistorialRep() {
     const matchesCategory = !categoryFilter || rep.categoria === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  useEffect(() => {
+    setPage(0);
+  }, [search, categoryFilter]);
+
+  const pagedHistorial = filteredHistorial.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
   return (
     <Box sx={{ pb: 4 }}>
@@ -92,7 +103,7 @@ function HistorialRep() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredHistorial.map((rep, idx) => (
+            {pagedHistorial.map((rep, idx) => (
               <TableRow key={rep.id + idx}>
                 <TableCell>{rep.nombre}</TableCell>
                 <TableCell>{categorias.find(c => c.id === rep.categoria)?.nombre || ""}</TableCell>
@@ -110,6 +121,14 @@ function HistorialRep() {
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        component="div"
+        count={filteredHistorial.length}
+        page={page}
+        onPageChange={(e, newPage) => setPage(newPage)}
+        rowsPerPage={rowsPerPage}
+        rowsPerPageOptions={[10]}
+      />
 
       {/* Dialog de detalle */}
       <Dialog 
