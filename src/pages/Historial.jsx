@@ -167,40 +167,60 @@ function Historial() {
     }
   };
 
-  const filteredSolicitudes = solicitudes.filter(sol => {
-    const s = solicitantes.find(x => x.id === sol.solicitante);
-    const nombreSolicitante = s ? s.nombre : sol.solicitante;
-    const estado = sol.estado || "pendiente";
-    const matchBusqueda = (
-      sol.evento?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      nombreSolicitante?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      estado?.toLowerCase().includes(busqueda.toLowerCase())
-    );
-
-    if (!matchBusqueda) return false;
-    if (isAdmin) return true;
-
-    if (isAreas || isInfra) {
-      const categoriasSolicitud = (sol.detalle || [])
-        .map((item) => {
-          const articulo = articulos.find((a) => a.id === item.articulo);
-          if (!articulo?.categoria) return "";
-          const categoriaObj = categorias.find((c) => c.id === articulo.categoria);
-          return normalizeText(categoriaObj?.nombre || "");
-        })
-        .filter(Boolean);
-
-      if (isAreas) {
-        return categoriasSolicitud.includes("areas y montajes");
-      }
-
-      if (isInfra) {
-        return categoriasSolicitud.includes("infraestructura");
-      }
+  const getSolicitudTimestamp = (sol) => {
+    if (typeof sol.timestamp === "number") return sol.timestamp;
+    if (sol.aprobadoEn) {
+      const aprobadoTs = new Date(sol.aprobadoEn).getTime();
+      if (!Number.isNaN(aprobadoTs)) return aprobadoTs;
     }
+    if (sol.rechazadaEn) {
+      const rechazadaTs = new Date(sol.rechazadaEn).getTime();
+      if (!Number.isNaN(rechazadaTs)) return rechazadaTs;
+    }
+    if (sol.fechaInicio) {
+      const fechaHora = `${sol.fechaInicio}T${sol.horaInicio || "00:00"}`;
+      const fechaTs = new Date(fechaHora).getTime();
+      if (!Number.isNaN(fechaTs)) return fechaTs;
+    }
+    return 0;
+  };
 
-    return true;
-  });
+  const filteredSolicitudes = solicitudes
+    .filter(sol => {
+      const s = solicitantes.find(x => x.id === sol.solicitante);
+      const nombreSolicitante = s ? s.nombre : sol.solicitante;
+      const estado = sol.estado || "pendiente";
+      const matchBusqueda = (
+        sol.evento?.toLowerCase().includes(busqueda.toLowerCase()) ||
+        nombreSolicitante?.toLowerCase().includes(busqueda.toLowerCase()) ||
+        estado?.toLowerCase().includes(busqueda.toLowerCase())
+      );
+
+      if (!matchBusqueda) return false;
+      if (isAdmin) return true;
+
+      if (isAreas || isInfra) {
+        const categoriasSolicitud = (sol.detalle || [])
+          .map((item) => {
+            const articulo = articulos.find((a) => a.id === item.articulo);
+            if (!articulo?.categoria) return "";
+            const categoriaObj = categorias.find((c) => c.id === articulo.categoria);
+            return normalizeText(categoriaObj?.nombre || "");
+          })
+          .filter(Boolean);
+
+        if (isAreas) {
+          return categoriasSolicitud.includes("areas y montajes");
+        }
+
+        if (isInfra) {
+          return categoriasSolicitud.includes("infraestructura");
+        }
+      }
+
+      return true;
+    })
+    .sort((a, b) => getSolicitudTimestamp(b) - getSolicitudTimestamp(a));
 
   return (
     <Box sx={{ pb: 4 }}>
