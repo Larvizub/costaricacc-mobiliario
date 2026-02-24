@@ -310,7 +310,9 @@ function Reparacion() {
       
       // Asignar cada ítem a un registro específico del grupo para mantener la referencia
       const memberIndex = i % group.miembros.length;
-      const memberFirebaseId = reparaciones[group.miembros[memberIndex]].firebaseId;
+      const memberRep = reparaciones[group.miembros[memberIndex]];
+      const memberFirebaseId = memberRep?.firebaseId;
+      const memberNumActivo = memberRep?.numActivo || rep.numActivo;
       
       push(ref(db, "entregaActivos"), {
         ...repData,
@@ -325,7 +327,7 @@ function Reparacion() {
         activosReparadosEsperados: activosReparados,
         activosDesechadosEsperados: activoDesechado,
         totalEnviados: totalRevisionGrupo,
-        numActivo: `${rep.numActivo}-${i + 1}` // Generar número único para cada activo
+        numActivo: memberNumActivo
       });
     }
     
