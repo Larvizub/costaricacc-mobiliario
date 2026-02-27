@@ -21,6 +21,7 @@ const TiempoCarga = lazy(() => import("./pages/TiempoCarga"));
 const Notificaciones = lazy(() => import("./pages/Notificaciones"));
 const Reparacion = lazy(() => import("./pages/Reparacion"));
 const HistorialRep = lazy(() => import("./pages/HistorialRep"));
+const Disponibilidad = lazy(() => import("./pages/Disponibilidad"));
 
 function App() {
   const { user, loading } = useAuth();
@@ -92,6 +93,7 @@ function App() {
                     <Route path="/reparacion" element={<Reparacion />} />
                     <Route path="/entrega-activos" element={<EntregaActivos />} />
                     <Route path="/historial-rep" element={<HistorialRep />} />
+                    <Route path="/disponibilidad" element={<Disponibilidad />} />
                   </Routes>
                 </ErrorBoundary>
               </MainLayout>

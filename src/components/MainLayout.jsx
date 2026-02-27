@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, IconButton, AppBar, Toolbar, Typography, useTheme, useMediaQuery, Avatar, Chip } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { Dashboard, Event, Inventory, Category, People, Settings, Logout, Brightness4, Brightness7, Mail, AccountCircle, ListAlt, AssignmentTurnedIn, ChecklistOutlined, Build, AssignmentReturn, History, BatteryChargingFull } from "@mui/icons-material";
+import { Dashboard, Event, Inventory, Category, People, Settings, Logout, Brightness4, Brightness7, Mail, AccountCircle, ListAlt, AssignmentTurnedIn, ChecklistOutlined, Build, AssignmentReturn, History, BatteryChargingFull, EventAvailable } from "@mui/icons-material";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -12,6 +12,7 @@ const menuItemsAdmin = [
   { text: "Dashboard", icon: <Dashboard />, path: "/" },
   { text: "Solicitud", icon: <Event />, path: "/solicitud" },
   { text: "Autorización", icon: <AssignmentTurnedIn />, path: "/autorizacion" },
+  { text: "Disponibilidad", icon: <EventAvailable />, path: "/disponibilidad" },
   { text: "Entregas", icon: <ChecklistOutlined />, path: "/entregas" },
   { text: "Tiempo de Carga", icon: <BatteryChargingFull />, path: "/tiempo-carga" },
   { text: "Inventario", icon: <Inventory />, path: "/inventario" },
@@ -29,6 +30,7 @@ const menuItemsCliente = [
   { text: "Dashboard", icon: <Dashboard />, path: "/" },
   { text: "Solicitud", icon: <Event />, path: "/solicitud" },
   { text: "Existencias", icon: <ListAlt />, path: "/existencias" },
+  { text: "Disponibilidad", icon: <EventAvailable />, path: "/disponibilidad" },
   { text: "Historial", icon: <Event />, path: "/historial" },
   { text: "Preferencias", icon: <Settings />, path: "/preferencias" }
 ];
@@ -37,6 +39,7 @@ const menuItemsInfra = [
   { text: "Dashboard", icon: <Dashboard />, path: "/" },
   { text: "Solicitud", icon: <Event />, path: "/solicitud" },
   { text: "Autorización", icon: <AssignmentTurnedIn />, path: "/autorizacion" },
+  { text: "Disponibilidad", icon: <EventAvailable />, path: "/disponibilidad" },
   { text: "Entregas", icon: <ChecklistOutlined />, path: "/entregas" },
   { text: "Tiempo de Carga", icon: <BatteryChargingFull />, path: "/tiempo-carga" },
   { text: "Inventario", icon: <Inventory />, path: "/inventario" },
@@ -50,6 +53,7 @@ const menuItemsInfra = [
 const menuItemsAreas = [
   { text: "Dashboard", icon: <Dashboard />, path: "/" },
   { text: "Autorización", icon: <AssignmentTurnedIn />, path: "/autorizacion" },
+  { text: "Disponibilidad", icon: <EventAvailable />, path: "/disponibilidad" },
   { text: "Historial", icon: <Event />, path: "/historial" },
   { text: "Inventario", icon: <Inventory />, path: "/inventario" },
   { text: "Existencias", icon: <ListAlt />, path: "/existencias" },
