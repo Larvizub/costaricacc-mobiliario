@@ -167,7 +167,7 @@ function Disponibilidad() {
       </Typography>
 
       <Paper sx={{ p: 3, borderRadius: 3, mb: 3 }}>
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1.5fr 1fr 1fr auto" }, gap: 2 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1.3fr 1.3fr 1fr 1fr auto" }, gap: 2 }}>
           <TextField
             label="Buscar artículo"
             value={busquedaArticulo}
