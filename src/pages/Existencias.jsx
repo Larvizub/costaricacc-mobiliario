@@ -4,6 +4,7 @@ import {
 } from "@mui/material";
 import { db } from "../firebase";
 import { ref, onValue } from "firebase/database";
+import { exportStyledXlsx } from "../utils/excelExport";
 
 function Existencias() {
   const [articulos, setArticulos] = useState([]);
@@ -35,21 +36,25 @@ function Existencias() {
     };
   }, []);
 
-  // Exportar a Excel (import dinámico para evitar problemas con optimizeDeps)
   const handleExportExcel = async () => {
     try {
-      const XLSX = await import('xlsx');
-      const data = articulosFiltrados.map(art => ({
-        Nombre: art.nombre,
-        Categoria: categorias.find(c => c.id === art.categoria)?.nombre || "",
-        Cantidad: art.cantidad
+      const rows = articulosFiltrados.map(art => ({
+        nombre: art.nombre,
+        categoria: categorias.find(c => c.id === art.categoria)?.nombre || "",
+        cantidad: art.cantidad
       }));
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Existencias");
-      XLSX.writeFile(wb, "existencias.xlsx");
+      await exportStyledXlsx({
+        fileName: "existencias.xlsx",
+        sheetName: "Existencias",
+        columns: [
+          { header: "Nombre", key: "nombre", width: 36 },
+          { header: "Categoría", key: "categoria", width: 28 },
+          { header: "Cantidad", key: "cantidad", width: 14 }
+        ],
+        rows
+      });
     } catch (e) {
-      console.error('Error loading xlsx for export', e);
+      console.error('Error exporting excel report', e);
       alert('No fue posible exportar a Excel. Intenta recargar la página.');
     }
   };

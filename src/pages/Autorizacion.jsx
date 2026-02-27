@@ -7,6 +7,7 @@ import { Check, Close, Visibility, Delete, FileDownload } from "@mui/icons-mater
 import { db } from "../firebase";
 import { ref, onValue, update, get, remove } from "firebase/database";
 import { sendMailGraph, getStatusHtml } from "../utils/email";
+import { exportStyledXlsx } from "../utils/excelExport";
 
 
 function Autorizacion() {
@@ -200,7 +201,6 @@ function Autorizacion() {
     if (!rows || !rows.length) return;
 
     try {
-      const XLSX = await import('xlsx');
       const data = rows.map(r => {
       const solicitanteObj = solicitantes.find(s => s.id === r.solicitante);
       const solicitanteNombre = solicitanteObj ? solicitanteObj.nombre : r.solicitante;
@@ -225,40 +225,39 @@ function Autorizacion() {
       }
 
       return {
-        'ID Evento': eventoVisibleId || '',
-        'Evento': r.evento || '',
-        'Artículos': items || '',
-        'Solicitante': solicitanteNombre || '',
-        'Fecha Inicio': r.fechaInicio || '',
-        'Hora Inicio': r.horaInicio || '',
-        'Fecha Fin': r.fechaFin || '',
-        'Hora Fin': r.horaFin || '',
-        'Persona entrega': r.entrega || '',
-        'Observaciones': r.observaciones || '',
-        'Estado': r.estado || ''
+        idEvento: eventoVisibleId || '',
+        evento: r.evento || '',
+        articulos: items || '',
+        solicitante: solicitanteNombre || '',
+        fechaInicio: r.fechaInicio || '',
+        horaInicio: r.horaInicio || '',
+        fechaFin: r.fechaFin || '',
+        horaFin: r.horaFin || '',
+        personaEntrega: r.entrega || '',
+        observaciones: r.observaciones || '',
+        estado: r.estado || ''
       };
     });
-
-      const ws = XLSX.utils.json_to_sheet(data);
-      // Ajustes de columna para mejor lectura
-      ws['!cols'] = [
-      { wch: 12 }, // ID Evento
-      { wch: 30 }, // Evento
-      { wch: 50 }, // Artículos
-      { wch: 25 }, // Solicitante
-      { wch: 12 }, // Fecha Inicio
-      { wch: 10 }, // Hora Inicio
-      { wch: 12 }, // Fecha Fin
-      { wch: 10 }, // Hora Fin
-      { wch: 25 }, // Persona entrega
-      { wch: 40 }, // Observaciones
-      { wch: 12 }  // Estado
-    ];
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Autorizaciones');
-      XLSX.writeFile(wb, filename);
+      await exportStyledXlsx({
+        fileName: filename,
+        sheetName: 'Autorizaciones',
+        columns: [
+          { header: 'ID Evento', key: 'idEvento', width: 14 },
+          { header: 'Evento', key: 'evento', width: 30 },
+          { header: 'Artículos', key: 'articulos', width: 50 },
+          { header: 'Solicitante', key: 'solicitante', width: 25 },
+          { header: 'Fecha Inicio', key: 'fechaInicio', width: 14 },
+          { header: 'Hora Inicio', key: 'horaInicio', width: 12 },
+          { header: 'Fecha Fin', key: 'fechaFin', width: 14 },
+          { header: 'Hora Fin', key: 'horaFin', width: 12 },
+          { header: 'Persona entrega', key: 'personaEntrega', width: 25 },
+          { header: 'Observaciones', key: 'observaciones', width: 40 },
+          { header: 'Estado', key: 'estado', width: 14 }
+        ],
+        rows: data
+      });
     } catch (e) {
-      console.error('Error loading xlsx for export', e);
+      console.error('Error exporting excel report', e);
       alert('No fue posible exportar a Excel. Intenta recargar la página.');
     }
   };

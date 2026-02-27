@@ -161,7 +161,7 @@ function Inventario() {
           }}
         >
           Importar Excel
-          <input type="file" accept=".xlsx,.xls" hidden ref={fileInputRef} onChange={handleImportExcel} />
+          <input type="file" accept=".xlsx" hidden ref={fileInputRef} onChange={handleImportExcel} />
         </Button>
       </Box>
       {importMsg && <Typography color={importMsg.startsWith("Error") ? "error" : "success.main"} sx={{ mb: 2 }}>{importMsg}</Typography>}

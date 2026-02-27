@@ -37,7 +37,7 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           mui: ['@mui/material', '@mui/icons-material'],
           firebase: ['firebase/app', 'firebase/database', 'firebase/auth'],
-          utils: ['xlsx', 'react-signature-canvas', 'emailjs-com']
+          utils: ['exceljs', 'react-signature-canvas', 'emailjs-com']
         }
       }
     }
@@ -45,7 +45,7 @@ export default defineConfig({
   optimizeDeps: {
     // Forzar la inclusión de dependencias problemáticas
     include: [
-      'xlsx',
+      'exceljs',
       '@mui/material',
       '@mui/icons-material',
       'firebase/app',
