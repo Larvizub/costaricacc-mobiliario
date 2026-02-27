@@ -3,8 +3,9 @@ import {
   Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Select, InputLabel, FormControl
 } from "@mui/material";
 import { Add, Edit, Delete } from "@mui/icons-material";
-import { db } from "../firebase";
+import { db, storage } from "../firebase";
 import { ref, push, onValue, remove, update } from "firebase/database";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { readExcelFile } from "../utils/excelImport";
 
 // Importar nodos de reparación
@@ -16,8 +17,10 @@ function Inventario() {
   const [categorias, setCategorias] = useState([]);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ nombre: "", categoria: "", cantidad: "", revision: 0 });
+  const [form, setForm] = useState({ nombre: "", categoria: "", cantidad: "", revision: 0, imagenUrl: "" });
   const [importMsg, setImportMsg] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef();
 
   // Cargar inventario y categorías
@@ -52,30 +55,59 @@ function Inventario() {
         nombre: articulo.nombre,
         categoria: articulo.categoria,
         cantidad: articulo.cantidad,
-        revision: articulo.revision || 0
+        revision: articulo.revision || 0,
+        imagenUrl: articulo.imagenUrl || ""
       });
     } else {
       setEditId(null);
-      setForm({ nombre: "", categoria: "", cantidad: "", revision: 0 });
+      setForm({ nombre: "", categoria: "", cantidad: "", revision: 0, imagenUrl: "" });
     }
+    setSelectedImage(null);
     setOpen(true);
   };
   const handleClose = () => {
     setOpen(false);
-    setForm({ nombre: "", categoria: "", cantidad: "" });
+    setForm({ nombre: "", categoria: "", cantidad: "", revision: 0, imagenUrl: "" });
+    setSelectedImage(null);
     setEditId(null);
   };
 
   // Guardar artículo (nuevo o editado)
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.nombre || !form.categoria || !form.cantidad) return;
-    const data = { ...form, revision: Number(form.revision) || 0 };
-    if (editId) {
-      update(ref(db, `inventario/${editId}`), data);
-    } else {
-      push(ref(db, "inventario"), data);
+    setSaving(true);
+    try {
+      const data = { ...form, revision: Number(form.revision) || 0 };
+
+      if (editId) {
+        if (selectedImage) {
+          const ext = selectedImage.name.split('.').pop() || 'jpg';
+          const imagePath = `inventario/${editId}/${Date.now()}.${ext}`;
+          const imageRef = storageRef(storage, imagePath);
+          await uploadBytes(imageRef, selectedImage);
+          data.imagenUrl = await getDownloadURL(imageRef);
+        }
+        await update(ref(db, `inventario/${editId}`), data);
+      } else {
+        const newRef = push(ref(db, "inventario"));
+        let imagenUrl = "";
+        if (selectedImage) {
+          const ext = selectedImage.name.split('.').pop() || 'jpg';
+          const imagePath = `inventario/${newRef.key}/${Date.now()}.${ext}`;
+          const imageRef = storageRef(storage, imagePath);
+          await uploadBytes(imageRef, selectedImage);
+          imagenUrl = await getDownloadURL(imageRef);
+        }
+        await update(newRef, { ...data, imagenUrl });
+      }
+
+      handleClose();
+    } catch (error) {
+      console.error('Error guardando artículo', error);
+      alert('No fue posible guardar el artículo con la imagen. Intenta nuevamente.');
+    } finally {
+      setSaving(false);
     }
-    handleClose();
   };
 
   // Eliminar artículo
@@ -256,11 +288,31 @@ function Inventario() {
             margin="normal"
             inputProps={{ min: 0 }}
           />
+          <Button
+            component="label"
+            variant="outlined"
+            sx={{ mt: 1, borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+            fullWidth
+          >
+            {selectedImage ? `Imagen seleccionada: ${selectedImage.name}` : "Subir imagen de referencia"}
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={e => setSelectedImage(e.target.files?.[0] || null)}
+            />
+          </Button>
+          {form.imagenUrl && !selectedImage && (
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Imagen actual: <a href={form.imagenUrl} target="_blank" rel="noreferrer">Ver imagen</a>
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={handleClose} sx={{ borderRadius: 2 }}>Cancelar</Button>
           <Button 
             onClick={handleSave} 
+            disabled={saving}
             variant="contained" 
             sx={{ 
               background: 'linear-gradient(135deg, #00830e 0%, #006400 100%)',

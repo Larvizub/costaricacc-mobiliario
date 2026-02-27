@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  Box, Typography, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button
+  Box, Typography, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Link
 } from "@mui/material";
 import { db } from "../firebase";
 import { ref, onValue } from "firebase/database";
@@ -41,7 +41,8 @@ function Existencias() {
       const rows = articulosFiltrados.map(art => ({
         nombre: art.nombre,
         categoria: categorias.find(c => c.id === art.categoria)?.nombre || "",
-        cantidad: art.cantidad
+        cantidad: art.cantidad,
+        imagenReferencia: art.imagenUrl || ""
       }));
       await exportStyledXlsx({
         fileName: "existencias.xlsx",
@@ -49,7 +50,8 @@ function Existencias() {
         columns: [
           { header: "Nombre", key: "nombre", width: 36 },
           { header: "Categoría", key: "categoria", width: 28 },
-          { header: "Cantidad", key: "cantidad", width: 14 }
+          { header: "Cantidad", key: "cantidad", width: 14 },
+          { header: "Imagen (Link)", key: "imagenReferencia", width: 60 }
         ],
         rows
       });
@@ -104,6 +106,7 @@ function Existencias() {
               <TableCell sx={{ fontWeight: 600 }}>Nombre</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Categoría</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Total</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Imagen de referencia</TableCell>
             </TableRow>
           </TableHead>
             <TableBody>
@@ -116,6 +119,15 @@ function Existencias() {
                     <TableCell>{art.nombre}</TableCell>
                     <TableCell>{categorias.find(c => c.id === art.categoria)?.nombre || ""}</TableCell>
                     <TableCell>{Number(art.cantidad) - revCount}</TableCell>
+                    <TableCell>
+                      {art.imagenUrl ? (
+                        <Link href={art.imagenUrl} target="_blank" rel="noreferrer">
+                          Ver imagen
+                        </Link>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
                   </TableRow>
                 );
               })}
