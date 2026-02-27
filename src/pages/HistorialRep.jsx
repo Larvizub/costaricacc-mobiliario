@@ -160,18 +160,47 @@ function HistorialRep() {
         fechaProcesamiento: rep.fechaProcesamiento ? new Date(rep.fechaProcesamiento).toLocaleString() : ""
       }));
 
+      const activosReparadosRows = filteredHistorial.flatMap((rep) => {
+        const detalle = Array.isArray(rep.entregasProcesadas) ? rep.entregasProcesadas : [];
+        const categoriaNombre = categorias.find(c => c.id === rep.categoria)?.nombre || "";
+        return detalle
+          .filter((item) => String(item?.tipo || '').trim().toLowerCase() === 'reparado')
+          .map((item) => ({
+            nombre: rep?.nombre || '',
+            categoria: categoriaNombre,
+            numActivo: item?.numActivo || '',
+            tipo: item?.tipo || '',
+            procesadoEn: item?.procesadoEn ? new Date(item.procesadoEn).toLocaleString() : ''
+          }));
+      });
+
       await exportStyledXlsx({
         fileName: `historial_reparaciones_${appliedFilters.dateFrom || 'sin_desde'}_${appliedFilters.dateTo || 'sin_hasta'}.xlsx`,
-        sheetName: "Historial Reparaciones",
-        columns: [
-          { header: "Nombre", key: "nombre", width: 30 },
-          { header: "Categoría", key: "categoria", width: 24 },
-          { header: "Total Reparado", key: "totalReparado", width: 16 },
-          { header: "Total Desecho", key: "totalDesecho", width: 16 },
-          { header: "Total Devuelto", key: "totalDevuelto", width: 16 },
-          { header: "Fecha Procesamiento", key: "fechaProcesamiento", width: 24 }
-        ],
-        rows
+        sheets: [
+          {
+            sheetName: "Historial Reparaciones",
+            columns: [
+              { header: "Nombre", key: "nombre", width: 30 },
+              { header: "Categoría", key: "categoria", width: 24 },
+              { header: "Total Reparado", key: "totalReparado", width: 16 },
+              { header: "Total Desecho", key: "totalDesecho", width: 16 },
+              { header: "Total Devuelto", key: "totalDevuelto", width: 16 },
+              { header: "Fecha Procesamiento", key: "fechaProcesamiento", width: 24 }
+            ],
+            rows
+          },
+          {
+            sheetName: "Activos Reparados",
+            columns: [
+              { header: "Nombre", key: "nombre", width: 30 },
+              { header: "Categoría", key: "categoria", width: 24 },
+              { header: "Num. Activo", key: "numActivo", width: 20 },
+              { header: "Tipo", key: "tipo", width: 16 },
+              { header: "Procesado En", key: "procesadoEn", width: 26 }
+            ],
+            rows: activosReparadosRows
+          }
+        ]
       });
     } catch (error) {
       setFilterError("No se pudo generar el reporte en Excel.");

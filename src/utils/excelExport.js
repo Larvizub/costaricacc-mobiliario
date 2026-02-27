@@ -17,13 +17,11 @@ const bodyBorder = {
   right: { style: 'thin', color: { argb: 'FFE0E0E0' } }
 };
 
-export async function exportStyledXlsx({ fileName, sheetName, columns, rows }) {
-  const { default: ExcelJS } = await import('exceljs');
-  const workbook = new ExcelJS.Workbook();
+function addStyledSheet(workbook, { sheetName, columns, rows }) {
   const worksheet = workbook.addWorksheet(sheetName);
 
   worksheet.columns = columns;
-  worksheet.addRows(rows);
+  worksheet.addRows(rows || []);
   worksheet.views = [{ state: 'frozen', ySplit: 1 }];
   worksheet.autoFilter = {
     from: { row: 1, column: 1 },
@@ -45,6 +43,17 @@ export async function exportStyledXlsx({ fileName, sheetName, columns, rows }) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF7F7F7' } };
       }
     });
+  }
+}
+
+export async function exportStyledXlsx({ fileName, sheetName, columns, rows, sheets }) {
+  const { default: ExcelJS } = await import('exceljs');
+  const workbook = new ExcelJS.Workbook();
+
+  if (Array.isArray(sheets) && sheets.length > 0) {
+    sheets.forEach((sheet) => addStyledSheet(workbook, sheet));
+  } else {
+    addStyledSheet(workbook, { sheetName, columns, rows });
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
