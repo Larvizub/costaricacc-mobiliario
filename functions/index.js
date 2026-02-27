@@ -60,13 +60,51 @@ function formatDateAsKey(date) {
   return `${year}-${month}-${day}`;
 }
 
-function buildReminderHtml({ tipoPool, solicitud }) {
+function isWeekend(date) {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+}
+
+function addBusinessDays(date, businessDays) {
+  const result = new Date(date);
+  let added = 0;
+  while (added < businessDays) {
+    result.setDate(result.getDate() + 1);
+    if (!isWeekend(result)) {
+      added += 1;
+    }
+  }
+  return result;
+}
+
+function buildReminderHtml({ tipoPool, solicitud, inventarioById }) {
   const evento = solicitud?.evento || '-';
   const fechaInicio = solicitud?.fechaInicio || '-';
   const horaInicio = solicitud?.horaInicio || '-';
   const fechaFin = solicitud?.fechaFin || '-';
   const horaFin = solicitud?.horaFin || '-';
   const entrega = solicitud?.entrega || '-';
+  const descripcion = solicitud?.observaciones || '-';
+  const detalle = Array.isArray(solicitud?.detalle) ? solicitud.detalle : [];
+
+  const detalleRows = detalle.length > 0
+    ? detalle.map((item) => {
+      const nombreArticulo = item?.nombre || inventarioById?.[item?.articulo]?.nombre || item?.articulo || '-';
+      const cantidad = item?.cantidad ?? '-';
+      const descripcionItem = item?.observaciones || item?.descripcion || '-';
+      return `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #e5e7eb;">${nombreArticulo}</td>
+          <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">${cantidad}</td>
+          <td style="padding: 8px; border: 1px solid #e5e7eb;">${descripcionItem}</td>
+        </tr>
+      `;
+    }).join('')
+    : `
+      <tr>
+        <td colspan="3" style="padding: 8px; border: 1px solid #e5e7eb; text-align: center; color: #6b7280;">Sin ítems registrados</td>
+      </tr>
+    `;
 
   return `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; background: #f7fafc; padding: 20px;">
@@ -75,13 +113,29 @@ function buildReminderHtml({ tipoPool, solicitud }) {
           Recordatorio de reserva (${tipoPool})
         </div>
         <div style="padding: 20px; color: #1f2937;">
-          <p style="margin: 0 0 12px 0;">Este es un recordatorio automático. La siguiente reserva inicia en 7 días:</p>
+          <p style="margin: 0 0 12px 0;">Este es un recordatorio automático. La siguiente reserva inicia en 6 días hábiles:</p>
           <table style="width:100%; border-collapse: collapse;">
             <tr><td style="padding: 6px 0; font-weight: 600;">Evento:</td><td>${evento}</td></tr>
             <tr><td style="padding: 6px 0; font-weight: 600;">Inicio:</td><td>${fechaInicio} ${horaInicio}</td></tr>
             <tr><td style="padding: 6px 0; font-weight: 600;">Fin:</td><td>${fechaFin} ${horaFin}</td></tr>
             <tr><td style="padding: 6px 0; font-weight: 600;">Entrega a:</td><td>${entrega}</td></tr>
+            <tr><td style="padding: 6px 0; font-weight: 600;">Descripción:</td><td>${descripcion}</td></tr>
           </table>
+          <div style="margin-top: 16px;">
+            <div style="font-weight: 600; margin-bottom: 8px;">Ítems en reserva</div>
+            <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+              <thead>
+                <tr style="background: #f3f4f6;">
+                  <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left;">Ítem</th>
+                  <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">Cantidad</th>
+                  <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left;">Descripción</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${detalleRows}
+              </tbody>
+            </table>
+          </div>
           <p style="margin: 16px 0 0 0; color: #6b7280; font-size: 12px;">
             Correo generado automáticamente por el sistema de gestión de mobiliario.
           </p>
@@ -162,14 +216,18 @@ const estadosNoBloqueantes = new Set([
   'completado'
 ]);
 
-exports.sendReservaRemindersOneWeekBefore = functions.pubsub
+const sendReservaRemindersSixBusinessDaysBeforeHandler = functions.pubsub
   .schedule('0 7 * * *')
   .timeZone('America/Costa_Rica')
   .onRun(async () => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const targetDate = new Date(now);
-    targetDate.setDate(targetDate.getDate() + 7);
+    if (isWeekend(now)) {
+      console.log('[sendReservaRemindersOneWeekBefore] Hoy es fin de semana, no se envían recordatorios.');
+      return null;
+    }
+
+    const targetDate = addBusinessDays(now, 6);
     const targetDateKey = formatDateAsKey(targetDate);
 
     const [solicitudesSnap, inventarioSnap, categoriasSnap, notificacionesSnap] = await Promise.all([
@@ -195,32 +253,32 @@ exports.sendReservaRemindersOneWeekBefore = functions.pubsub
 
       const pools = getPoolsForSolicitud({ solicitud, inventarioById, categoriasById, notificaciones });
       const updates = {};
-      const recordatoriosSemana = solicitud?.recordatorios?.semana || {};
+      const recordatoriosSeisHabiles = solicitud?.recordatorios?.seisDiasHabiles || {};
 
-      if (pools.tieneMobiliario && !recordatoriosSemana?.mobiliario?.enviadoAt && pools.correosMobiliario.length > 0) {
-        const asunto = `Recordatorio: reserva de mobiliario en 7 días${solicitud?.evento ? ` - ${solicitud.evento}` : ''}`;
-        const html = buildReminderHtml({ tipoPool: 'Mobiliario', solicitud });
+      if (pools.tieneMobiliario && !recordatoriosSeisHabiles?.mobiliario?.enviadoAt && pools.correosMobiliario.length > 0) {
+        const asunto = `Recordatorio: reserva de mobiliario en 6 días hábiles${solicitud?.evento ? ` - ${solicitud.evento}` : ''}`;
+        const html = buildReminderHtml({ tipoPool: 'Mobiliario', solicitud, inventarioById });
         await sendGraphMailFromServer({
           toEmails: pools.correosMobiliario,
           subject: asunto,
           html
         });
-        updates['recordatorios/semana/mobiliario'] = {
+        updates['recordatorios/seisDiasHabiles/mobiliario'] = {
           enviadoAt: Date.now(),
           destinatarios: [...new Set(pools.correosMobiliario)]
         };
         remindersSent += 1;
       }
 
-      if (pools.tieneInfraestructura && !recordatoriosSemana?.infraestructura?.enviadoAt && pools.correosInfraestructura.length > 0) {
-        const asunto = `Recordatorio: reserva de infraestructura en 7 días${solicitud?.evento ? ` - ${solicitud.evento}` : ''}`;
-        const html = buildReminderHtml({ tipoPool: 'Infraestructura', solicitud });
+      if (pools.tieneInfraestructura && !recordatoriosSeisHabiles?.infraestructura?.enviadoAt && pools.correosInfraestructura.length > 0) {
+        const asunto = `Recordatorio: reserva de infraestructura en 6 días hábiles${solicitud?.evento ? ` - ${solicitud.evento}` : ''}`;
+        const html = buildReminderHtml({ tipoPool: 'Infraestructura', solicitud, inventarioById });
         await sendGraphMailFromServer({
           toEmails: pools.correosInfraestructura,
           subject: asunto,
           html
         });
-        updates['recordatorios/semana/infraestructura'] = {
+        updates['recordatorios/seisDiasHabiles/infraestructura'] = {
           enviadoAt: Date.now(),
           destinatarios: [...new Set(pools.correosInfraestructura)]
         };
@@ -232,9 +290,12 @@ exports.sendReservaRemindersOneWeekBefore = functions.pubsub
       }
     }
 
-    console.log(`[sendReservaRemindersOneWeekBefore] Recordatorios enviados: ${remindersSent}. Fecha objetivo: ${targetDateKey}`);
+    console.log(`[sendReservaRemindersOneWeekBefore] Recordatorios enviados: ${remindersSent}. Fecha objetivo (6 días hábiles): ${targetDateKey}`);
     return null;
   });
+
+exports.sendReservaRemindersSixBusinessDaysBefore = sendReservaRemindersSixBusinessDaysBeforeHandler;
+exports.sendReservaRemindersOneWeekBefore = sendReservaRemindersSixBusinessDaysBeforeHandler;
 
 // Función HTTPS para enviar correo (Generación 1)
 exports.sendMailGraph = functions.https.onRequest(async (req, res) => {
