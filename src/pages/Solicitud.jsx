@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import {
   Box, Typography, Paper, TextField, Button, MenuItem, Select, InputLabel, FormControl, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { Add, Delete, Edit } from "@mui/icons-material";
 import { db } from "../firebase";
 import { ref, push, onValue, get } from "firebase/database";
@@ -11,6 +12,7 @@ import { searchEvent } from "../utils/skillService";
 
 function Solicitud() {
   const { user, userData } = useAuth();
+  const theme = useTheme();
   const canCreateSolicitud = !!user;
   const [form, setForm] = useState({
     evento: "",
@@ -691,7 +693,13 @@ function Solicitud() {
         <DialogContent sx={{ pt: 3 }}>
           <Typography>La solicitud se procesó correctamente.</Typography>
           {showInfraPriorityNotice && (
-            <Typography sx={{ mt: 2, fontWeight: 600, color: 'warning.dark' }}>
+            <Typography
+              sx={{
+                mt: 2,
+                fontWeight: 600,
+                color: theme.palette.mode === "dark" ? "common.white" : "success.main"
+              }}
+            >
               {INFRA_PRIORITY_NOTICE}
             </Typography>
           )}
