@@ -162,6 +162,32 @@ function Dashboard() {
     return date.toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric', month: 'short' });
   };
 
+  const normalizeText = (text = '') =>
+    text
+      .toString()
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  const getEventoCategoria = (evento) => {
+    const categoriasEvento = (evento.detalle || [])
+      .map((item) => {
+        const articulo = articulos.find(a => a.id === item.articulo);
+        if (!articulo?.categoria) return null;
+        return categorias.find(c => c.id === articulo.categoria)?.nombre || null;
+      })
+      .filter(Boolean)
+      .map(normalizeText);
+
+    const esInfraestructura = categoriasEvento.some(nombre => nombre === 'infraestructura');
+    const esAreas = categoriasEvento.some(nombre => nombre === 'areas y montajes' || nombre === 'areas');
+
+    if (esInfraestructura) return 'Infraestructura';
+    if (esAreas) return 'Áreas';
+    return '—';
+  };
+
   return (
     <Box sx={{ pb: 4 }}>
       {/* Header con título y filtros */}
@@ -502,6 +528,7 @@ function Dashboard() {
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 600 }}>Evento</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Categoría</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Solicitante</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Fechas</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
@@ -510,7 +537,7 @@ function Dashboard() {
             <TableBody>
               {eventosMes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} sx={{ textAlign: 'center', py: 4 }}>
+                  <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       No hay eventos registrados para este mes
                     </Typography>
@@ -522,6 +549,7 @@ function Dashboard() {
                   return (
                     <TableRow key={ev.id} hover>
                       <TableCell>{ev.evento}</TableCell>
+                      <TableCell>{getEventoCategoria(ev)}</TableCell>
                       <TableCell>{solicitanteObj ? solicitanteObj.nombre : ev.solicitante}</TableCell>
                       <TableCell>
                         {ev.fechaInicio} {ev.horaInicio} - {ev.fechaFin} {ev.horaFin}
