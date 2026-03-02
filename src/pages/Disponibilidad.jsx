@@ -107,8 +107,15 @@ function Disponibilidad() {
 
     setLoading(true);
     try {
-      const snap = await get(ref(db, "solicitudes"));
-      const solicitudes = snap.exists() ? Object.values(snap.val()) : [];
+      const [snapSolicitudes, snapTiemposCarga] = await Promise.all([
+        get(ref(db, "solicitudes")),
+        get(ref(db, "tiemposCarga"))
+      ]);
+
+      const solicitudes = snapSolicitudes.exists() ? Object.values(snapSolicitudes.val()) : [];
+      const tiemposCarga = snapTiemposCarga.exists()
+        ? Object.values(snapTiemposCarga.val())
+        : [];
 
       const coincidencias = [];
 
@@ -144,6 +151,25 @@ function Disponibilidad() {
             observaciones: observacionesItem || sol.observaciones || "-"
           });
         }
+      });
+
+      tiemposCarga.forEach(tc => {
+        if (tc.articuloId !== articuloId) return;
+
+        const inicioCarga = parseDateTime(tc.fechaInicio, tc.horaInicio, false);
+        const finCarga = parseDateTime(tc.fechaFin, tc.horaFin, true);
+        if (!inicioCarga || !finCarga) return;
+
+        const hayTraslape = fin >= inicioCarga && inicio <= finCarga;
+        if (!hayTraslape) return;
+
+        coincidencias.push({
+          evento: "Tiempo de carga",
+          fechaInicio: tc.fechaInicio || "-",
+          fechaFin: tc.fechaFin || "-",
+          cantidad: Number(articuloSeleccionado?.cantidad) || 1,
+          observaciones: tc.observaciones || "Bloqueado por tiempo de carga"
+        });
       });
 
       if (coincidencias.length > 0) {

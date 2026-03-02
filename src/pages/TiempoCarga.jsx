@@ -160,10 +160,18 @@ function TiempoCarga() {
 
   // Filtrar tiempos de carga por búsqueda
   const tiemposFiltrados = useMemo(() => {
-    return tiemposCarga.filter(tc => 
-      tc.articuloNombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tc.observaciones?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const termino = searchTerm.toLowerCase();
+
+    return tiemposCarga
+      .filter(tc =>
+        tc.articuloNombre?.toLowerCase().includes(termino) ||
+        tc.observaciones?.toLowerCase().includes(termino)
+      )
+      .sort((a, b) => {
+        const fechaA = new Date(`${a.fechaInicio}T${a.horaInicio || "00:00"}`).getTime();
+        const fechaB = new Date(`${b.fechaInicio}T${b.horaInicio || "00:00"}`).getTime();
+        return fechaB - fechaA;
+      });
   }, [tiemposCarga, searchTerm]);
 
   // No mostrar el módulo si el usuario no es de infraestructura
