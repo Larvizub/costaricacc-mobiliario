@@ -8,7 +8,25 @@ const getDesignTokens = (mode) => ({
     },
     secondary: {
       main: "#333"
-    }
+    },
+    ...(mode === "dark"
+      ? {
+          background: {
+            default: "#0b1016",
+            paper: "#161d26"
+          },
+          text: {
+            primary: "#e7edf5",
+            secondary: "#a7b3c2"
+          },
+          divider: "rgba(255,255,255,0.12)"
+        }
+      : {
+          background: {
+            default: "#f5f6f8",
+            paper: "#ffffff"
+          }
+        })
   },
   typography: {
     // Establecer una tipografía moderna consistente
@@ -21,6 +39,22 @@ const getDesignTokens = (mode) => ({
     h5: {
       fontFamily: 'Inter, sans-serif',
       fontWeight: 600,
+    }
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: mode === "dark" ? "#0b1016" : "#f5f6f8"
+        }
+      }
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none"
+        }
+      }
     }
   }
 });

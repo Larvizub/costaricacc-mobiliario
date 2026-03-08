@@ -7,20 +7,7 @@ export default defineConfig({
   server: {
     hmr: {
       overlay: false // Desactivar overlay de errores para evitar conflictos
-    },
-    fs: {
-      // Permitir acceso a archivos fuera del root si es necesario
-      allow: ['.']
-    },
-    // Agregar configuración para manejar mejor las dependencias
-    watch: {
-      usePolling: true,
-      interval: 300
-    },
-    // Forzar refresh del cache
-    force: true,
-    // Preload de módulos problemáticos
-    preTransformRequests: false
+    }
   },
   build: {
     rollupOptions: {
@@ -55,8 +42,6 @@ export default defineConfig({
       'emailjs-com'
     ],
     // Excluir dependencias que causan problemas
-    exclude: [],
-    // Forzar refresh del cache
-    force: true
+    exclude: []
   }
 })

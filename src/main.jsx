@@ -19,11 +19,20 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   </React.StrictMode>
 );
 
-// Registrar service worker para soportar instalación PWA
+// En desarrollo, desregistrar SW para no interferir con HMR de Vite.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('[sw] ServiceWorker registrado:', reg.scope))
-      .catch(err => console.warn('[sw] Registro ServiceWorker fallido:', err));
-  });
+  if (import.meta.env.DEV) {
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => {
+        registrations.forEach((registration) => registration.unregister());
+      })
+      .catch((err) => console.warn('[sw] No se pudieron limpiar registros en dev:', err));
+  } else {
+    // Registrar service worker solo en producción para soportar instalación PWA.
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then((reg) => console.log('[sw] ServiceWorker registrado:', reg.scope))
+        .catch((err) => console.warn('[sw] Registro ServiceWorker fallido:', err));
+    });
+  }
 }
